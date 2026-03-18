@@ -96,6 +96,41 @@ async function loadDashboard() {
         const res = await fetch('/api/reports/summary');
         const data = await res.json();
 
+        // ---- Banner Scadenze ----
+        let alertBanner = document.getElementById('dash-deadline-alert');
+        if (!alertBanner) {
+            alertBanner = document.createElement('div');
+            alertBanner.id = 'dash-deadline-alert';
+            const dashCards = document.getElementById('dash-cards');
+            dashCards.parentNode.insertBefore(alertBanner, dashCards);
+        }
+        try {
+            const alertRes = await fetch('/api/deadline-alerts');
+            const alerts = await alertRes.json();
+            if (alerts.overdue_count > 0 || alerts.upcoming_count > 0) {
+                let bannerHTML = '';
+                if (alerts.overdue_count > 0) {
+                    bannerHTML += `<div class="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl p-4 cursor-pointer hover:bg-red-100 transition-colors" onclick="navigateTo('deadlines')">
+                        <div class="w-10 h-10 rounded-full bg-red-200 flex items-center justify-center text-lg">🔴</div>
+                        <div class="flex-1"><div class="font-bold text-red-700">${alerts.overdue_count} fattur${alerts.overdue_count === 1 ? 'a scaduta' : 'e scadute'}</div>
+                        <div class="text-sm text-red-600">Totale: ${formatCurrency(alerts.overdue_total)}</div></div>
+                        <div class="text-red-400 text-sm">Vai allo Scadenziario →</div>
+                    </div>`;
+                }
+                if (alerts.upcoming_count > 0) {
+                    bannerHTML += `<div class="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4 cursor-pointer hover:bg-amber-100 transition-colors mt-2" onclick="navigateTo('deadlines')">
+                        <div class="w-10 h-10 rounded-full bg-amber-200 flex items-center justify-center text-lg">⏳</div>
+                        <div class="flex-1"><div class="font-bold text-amber-700">${alerts.upcoming_count} fattur${alerts.upcoming_count === 1 ? 'a in scadenza' : 'e in scadenza'} entro 7 giorni</div>
+                        <div class="text-sm text-amber-600">Totale: ${formatCurrency(alerts.upcoming_total)}</div></div>
+                        <div class="text-amber-400 text-sm">Vai allo Scadenziario →</div>
+                    </div>`;
+                }
+                alertBanner.innerHTML = `<div class="mb-4">${bannerHTML}</div>`;
+            } else {
+                alertBanner.innerHTML = '';
+            }
+        } catch (e) { console.warn('Deadline alerts error', e); }
+
         const cards = document.getElementById('dash-cards');
         cards.innerHTML = `
             <div class="stat-card bg-white p-5 rounded-xl border border-slate-200 shadow-sm">

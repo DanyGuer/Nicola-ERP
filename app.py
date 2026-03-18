@@ -130,6 +130,41 @@ def mobile_app():
 
 
 # ============================================
+#   API: DEADLINE ALERTS
+# ============================================
+
+@app.route('/api/deadline-alerts', methods=['GET'])
+@login_required
+def deadline_alerts():
+    db = get_db()
+    today = datetime.datetime.now().strftime('%Y-%m-%d')
+    week_later = (datetime.datetime.now() + datetime.timedelta(days=7)).strftime('%Y-%m-%d')
+    
+    # Fatture scadute
+    overdue = db.execute("""
+        SELECT COUNT(*) as count, COALESCE(SUM(total), 0) as total 
+        FROM invoices 
+        WHERE status NOT IN ('Pagata', 'Annullata') 
+        AND due_date IS NOT NULL AND due_date < ?
+    """, (today,)).fetchone()
+    
+    # Fatture in scadenza entro 7 giorni
+    upcoming = db.execute("""
+        SELECT COUNT(*) as count, COALESCE(SUM(total), 0) as total 
+        FROM invoices 
+        WHERE status NOT IN ('Pagata', 'Annullata') 
+        AND due_date IS NOT NULL AND due_date >= ? AND due_date <= ?
+    """, (today, week_later)).fetchone()
+    
+    return jsonify({
+        'overdue_count': overdue['count'],
+        'overdue_total': overdue['total'],
+        'upcoming_count': upcoming['count'],
+        'upcoming_total': upcoming['total']
+    })
+
+
+# ============================================
 #   API: CLIENTS
 # ============================================
 
