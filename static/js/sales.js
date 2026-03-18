@@ -717,28 +717,7 @@ function salesGeneratePDF() {
 
     bY += payBoxH + 5;
 
-    // ---- FOOTER: Acceptance Section ----
-    checkPageBreak(45);
-
-    doc.setDrawColor(...DARK_BLUE);
-    doc.setLineWidth(0.3);
-    doc.line(marginL, bY, marginR, bY);
-
-    // TIMBRO E FIRMA
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.setTextColor(...BLACK);
-    doc.text("TIMBRO E FIRMA COMMITTENTE", 150, bY + 8, { align: 'center' });
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.text("Data Accettazione: __________________", marginL, bY + 18);
-
-    doc.setFontSize(8);
-    doc.setTextColor(...GRAY);
-    doc.text("(Legale rappresentante)", 150, bY + 18, { align: 'center' });
-
-    // Company footer info
+    // Company footer info (pagina 1)
     drawPageFooter(doc, marginL, marginR, pageW, DARK_BLUE, GRAY);
 
     // ==========================================
