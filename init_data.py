@@ -45,14 +45,17 @@ def init_data():
                       (generate_id(), p[0], p[1], p[2], p[3]))
 
     # Crea l'utente admin se non esiste (viene eseguito SEMPRE all'avvio)
-    c.execute("SELECT id FROM users WHERE username = 'admin'")
+    # Crea utente Nicola se non esiste
+    c.execute("SELECT id FROM users WHERE username = 'Nicola'")
     if not c.fetchone():
         from werkzeug.security import generate_password_hash
-        admin_id = str(uuid.uuid4())
-        admin_hash = generate_password_hash('admin')
+        user_id = str(uuid.uuid4())
+        user_hash = generate_password_hash('cartone')
         c.execute("INSERT INTO users (id, username, password_hash) VALUES (?, ?, ?)", 
-                  (admin_id, 'admin', admin_hash))
-        print("Utente admin creato (admin/admin)")
+                  (user_id, 'Nicola', user_hash))
+        print("Utente creato (Nicola/cartone)")
+    # Rimuovi vecchio utente admin se esiste
+    c.execute("DELETE FROM users WHERE username = 'admin'")
 
     conn.commit()
     conn.close()

@@ -1,5 +1,19 @@
 // App Logic - Navigation & Dashboard
 
+// ============================================
+//   API WRAPPER (gestisce sessione scaduta)
+// ============================================
+
+async function apiFetch(url, options = {}) {
+    const res = await fetch(url, options);
+    if (res.status === 401) {
+        alert('Sessione scaduta. Effettua il login.');
+        window.location.href = '/login';
+        return null;
+    }
+    return res;
+}
+
 function formatCurrency(val) {
     return '€ ' + Number(val || 0).toFixed(2).replace('.', ',');
 }

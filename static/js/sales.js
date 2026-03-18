@@ -406,6 +406,23 @@ const EUR = (val) => {
     return '\u20AC ' + Number(val).toFixed(2).replace('.', ',');
 };
 
+function drawPageFooter(doc, marginL, marginR, pageW, DARK_BLUE, GRAY) {
+    const footerY = 278;
+    doc.setDrawColor(...DARK_BLUE);
+    doc.setLineWidth(0.2);
+    doc.line(marginL, footerY, marginR, footerY);
+
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...DARK_BLUE);
+    doc.text("DESIGN & CREATION di Nicola Guerra", pageW / 2, footerY + 4, { align: 'center' });
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(...GRAY);
+    doc.text("Sede Legale: Via P.le Caldarulo 18, Bari 70132 - P.IVA 03445000734", pageW / 2, footerY + 8, { align: 'center' });
+    doc.text("Email: guerranicola76@gmail.com - Tel: +39 379 143 0601", pageW / 2, footerY + 12, { align: 'center' });
+}
+
 function salesGeneratePDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('p', 'mm', 'a4');
@@ -589,7 +606,17 @@ function salesGeneratePDF() {
     const rowH = 6;
     let bY = tableEndY;
 
+    // Helper: controlla se serve nuova pagina
+    const checkPageBreak = (neededHeight) => {
+        if (bY + neededHeight > 270) {
+            drawPageFooter(doc, marginL, marginR, pageW, DARK_BLUE, GRAY);
+            doc.addPage();
+            bY = 20;
+        }
+    };
+
     const drawTotalRow = (label, value, isBold, isRed, hasBg) => {
+        checkPageBreak(rowH + 2);
         if (hasBg) {
             doc.setFillColor(...LIGHT_GRAY_BG);
             doc.rect(boxX, bY, boxW, rowH, 'F');
@@ -619,6 +646,7 @@ function salesGeneratePDF() {
     drawTotalRow(`IVA (${totals.vatRate}%):`, EUR(totals.vatAmount), false, false, false);
 
     // TOTALE LAVORAZIONE (bigger row)
+    checkPageBreak(rowH + 5);
     doc.setFillColor(...LIGHT_GRAY_BG);
     doc.rect(boxX, bY, boxW, rowH + 1, 'F');
     doc.rect(boxX, bY, boxW, rowH + 1, 'S');
@@ -631,39 +659,39 @@ function salesGeneratePDF() {
 
     // ---- PAYMENT BREAKDOWN BOX ----
     const payTerms = form.querySelector('[name="paymentTerms"]').value || '';
-    const payBoxY = bY;
     const payBoxH = 28;
+    checkPageBreak(payBoxH + 5);
 
     doc.setDrawColor(0, 0, 0);
     doc.setLineWidth(0.2);
-    doc.rect(marginL, payBoxY, contentW, payBoxH, 'S');
+    doc.rect(marginL, bY, contentW, payBoxH, 'S');
 
     // Title 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
     doc.setTextColor(...BLACK);
-    doc.text("Modalità di pagamento dettagliate:", marginL + 2, payBoxY + 5);
+    doc.text("Modalità di pagamento dettagliate:", marginL + 2, bY + 5);
     const ptW = doc.getTextWidth("Modalità di pagamento dettagliate:");
     doc.setDrawColor(...BLACK);
     doc.setLineWidth(0.15);
-    doc.line(marginL + 2, payBoxY + 5.5, marginL + 2 + ptW, payBoxY + 5.5);
+    doc.line(marginL + 2, bY + 5.5, marginL + 2 + ptW, bY + 5.5);
 
     // Payment text
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
-    doc.text(payTerms, marginL + 2, payBoxY + 10);
+    doc.text(payTerms, marginL + 2, bY + 10);
 
     // Dashed separator
     doc.setDrawColor(180, 180, 180);
     doc.setLineDashPattern([1, 1], 0);
-    doc.line(marginL + 1, payBoxY + 14, marginR - 1, payBoxY + 14);
+    doc.line(marginL + 1, bY + 14, marginR - 1, bY + 14);
     doc.setLineDashPattern([], 0);
     doc.setDrawColor(0, 0, 0);
 
     // Title rate breakdown
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
-    doc.text("Ripartizione Rate (Stima su Totale Lavorazione):", marginL + 2, payBoxY + 18);
+    doc.text("Ripartizione Rate (Stima su Totale Lavorazione):", marginL + 2, bY + 18);
 
     // Parse percentages
     const matches = payTerms.match(/(\d+)\s*%/g);
@@ -677,51 +705,41 @@ function salesGeneratePDF() {
 
             doc.setDrawColor(0, 0, 0);
             doc.setLineWidth(0.15);
-            doc.rect(xPos, payBoxY + 20, cellW, cellH, 'S');
+            doc.rect(xPos, bY + 20, cellW, cellH, 'S');
             doc.setFont("helvetica", "bold");
             doc.setFontSize(8);
             doc.setTextColor(...BLACK);
-            doc.text(`${perc}% = ${EUR(amount)}`, xPos + 2, payBoxY + 24);
+            doc.text(`${perc}% = ${EUR(amount)}`, xPos + 2, bY + 24);
 
             xPos += cellW + 3;
         });
     }
 
+    bY += payBoxH + 5;
+
     // ---- FOOTER: Acceptance Section ----
-    const footY = 252;
+    checkPageBreak(45);
 
     doc.setDrawColor(...DARK_BLUE);
     doc.setLineWidth(0.3);
-    doc.line(marginL, footY, marginR, footY);
+    doc.line(marginL, bY, marginR, bY);
 
     // TIMBRO E FIRMA
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     doc.setTextColor(...BLACK);
-    doc.text("TIMBRO E FIRMA COMMITTENTE", 150, footY + 8, { align: 'center' });
+    doc.text("TIMBRO E FIRMA COMMITTENTE", 150, bY + 8, { align: 'center' });
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
-    doc.text("Data Accettazione: __________________", marginL, footY + 18);
+    doc.text("Data Accettazione: __________________", marginL, bY + 18);
 
     doc.setFontSize(8);
     doc.setTextColor(...GRAY);
-    doc.text("(Legale rappresentante)", 150, footY + 18, { align: 'center' });
+    doc.text("(Legale rappresentante)", 150, bY + 18, { align: 'center' });
 
     // Company footer info
-    doc.setDrawColor(...DARK_BLUE);
-    doc.setLineWidth(0.2);
-    doc.line(marginL, footY + 25, marginR, footY + 25);
-
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...DARK_BLUE);
-    doc.text("DESIGN & CREATION di Nicola Guerra", pageW / 2, footY + 29, { align: 'center' });
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
-    doc.setTextColor(...GRAY);
-    doc.text("Sede Legale: Via P.le Caldarulo 18, Bari 70132 - P.IVA 03445000734", pageW / 2, footY + 33, { align: 'center' });
-    doc.text("Email: guerranicola76@gmail.com - Tel: +39 379 143 0601", pageW / 2, footY + 37, { align: 'center' });
+    drawPageFooter(doc, marginL, marginR, pageW, DARK_BLUE, GRAY);
 
     // ==========================================
     //   PAGE 2 - CONDIZIONI GENERALI
