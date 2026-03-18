@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0f172a">
+    <title>ERP Agenda</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="icon" href="/static/img/icon-192.png">
+    <link rel="apple-touch-icon" href="/static/img/icon-192.png">
+    <!-- Local Resources for Speed -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #0f172a;
+            color: #f1f5f9;
+            min-height: 100vh;
+            overscroll-behavior: none;
+            -webkit-tap-highlight-color: transparent
+        }
+
+        /* Status bar spacer */
+        .safe-top {
+            height: env(safe-area-inset-top, 0px)
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            padding: 20px 20px 16px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 1px solid #1e293b
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.5px
+        }
+
+        .header .subtitle {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 2px
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px
+        }
+
+        .header-actions button {
+            flex: 1;
+            padding: 10px;
+            border-radius: 12px;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px
+        }
+
+        .btn-primary {
+            background: #4f46e5;
+            color: white
+        }
+
+        .btn-secondary {
+            background: #1e293b;
+            color: #94a3b8;
+            border: 1px solid #334155 !important
+        }
+
+        /* Date Navigation */
+        .date-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: #1e293b;
+            border-bottom: 1px solid #334155
+        }
+
+        .date-nav button {
+            background: none;
+            border: 1px solid #334155;
+            color: #94a3b8;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .date-nav .current-date {
+            font-weight: 700;
+            font-size: 15px;
+            color: #e2e8f0
+        }
+
+        /* Tab Bar */
+        .tabs {
+            display: flex;
+            padding: 0 20px;
+            gap: 6px;
+            background: #0f172a;
+            padding-top: 12px
+        }
+
+        .tab {
+            flex: 1;
+            padding: 8px;
+            border-radius: 10px;
+            border: none;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s
+        }
+
+        .tab.active {
+            background: #4f46e5;
+            color: white
+        }
+
+        .tab:not(.active) {
+            background: #1e293b;
+            color: #64748b
+        }
+
+        /* Content */
+        .content {
+            padding: 16px 20px 100px;
+            min-height: 60vh
+        }
+
+        /* Day Group */
+        .day-header {
+            font-size: 13px;
+            font-weight: 700;
+            color: #4f46e5;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 20px 0 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .day-header:first-child {
+            margin-top: 4px
+        }
+
+        .day-header .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4f46e5
+        }
+
+        .day-header.today {
+            color: #22c55e
+        }
+
+        .day-header.today .dot {
+            background: #22c55e
+        }
+
+        .day-header.past {
+            color: #475569
+        }
+
+        .day-header.past .dot {
+            background: #475569
+        }
+
+        /* Event Card */
+        .event-card {
+            background: #1e293b;
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            border: 1px solid #334155;
+            transition: all 0.15s;
+            position: relative;
+            overflow: hidden
+        }
+
+        .event-card.completed {
+            opacity: 0.45
+        }
+
+        .event-card:active {
+            transform: scale(0.98);
+            background: #253042
+        }
+
+        .event-type-bar {
+            width: 4px;
+            border-radius: 2px;
+            min-height: 40px;
+            flex-shrink: 0
+        }
+
+        .type-appuntamento {
+            background: #3b82f6
+        }
+
+        .type-sopralluogo {
+            background: #f59e0b
+        }
+
+        .type-consegna {
+            background: #22c55e
+        }
+
+        .type-scadenza {
+            background: #ef4444
+        }
+
+        .type-altro {
+            background: #8b5cf6
+        }
+
+        .event-info {
+            flex: 1;
+            min-width: 0
+        }
+
+        .event-title {
+            font-weight: 600;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis
+        }
+
+        .event-meta {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 3px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap
+        }
+
+        .event-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0
+        }
+
+        .check-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid #334155;
+            background: none;
+            color: #64748b;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s
+        }
+
+        .check-btn.done {
+            background: #22c55e;
+            border-color: #22c55e;
+            color: white
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #475569;
+            font-size: 11px;
+            cursor: pointer
+        }
+
+        /* Empty State */
+        .empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: #475569
+        }
+
+        .empty .icon {
+            font-size: 48px;
+            margin-bottom: 12px
+        }
+
+        .empty p {
+            font-size: 14px
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+            animation: fadeIn 0.2s
+        }
+
+        .modal-overlay.show {
+            display: flex
+        }
+
+        .modal {
+            background: #1e293b;
+            border-radius: 20px 20px 0 0;
+            padding: 24px 20px 40px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 85vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)
+        }
+
+        .modal .handle {
+            width: 40px;
+            height: 4px;
+            border-radius: 2px;
+            background: #475569;
+            margin: 0 auto 20px
+        }
+
+        .modal h2 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px
+        }
+
+        .form-group {
+            margin-bottom: 14px
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #94a3b8;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: #f1f5f9;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border 0.2s
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #4f46e5
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px
+        }
+
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px
+        }
+
+        .save-btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 14px;
+            border: none;
+            background: #4f46e5;
+            color: white;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.2s
+        }
+
+        .save-btn:active {
+            background: #4338ca
+        }
+
+        /* Type badges */
+        .type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600
+        }
+
+        .badge-appuntamento {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa
+        }
+
+        .badge-sopralluogo {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24
+        }
+
+        .badge-consegna {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80
+        }
+
+        .badge-scadenza {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171
+        }
+
+        .badge-altro {
+            background: rgba(139, 92, 246, 0.15);
+            color: #a78bfa
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0
+            }
+
+            to {
+                opacity: 1
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%)
+            }
+
+            to {
+                transform: translateY(0)
+            }
+        }
+
+        /* Bottom nav (install prompt) */
+        .install-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #1e293b;
+            border-top: 1px solid #334155;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 50;
+            display: none
+        }
+
+        .install-bar.show {
+            display: flex
+        }
+
+        .install-bar span {
+            font-size: 13px;
+            color: #94a3b8
+        }
+
+        .install-bar button {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer
+        }
+
+        /* Stats bar */
+        .stats {
+            display: flex;
+            gap: 8px;
+            padding: 12px 20px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch
+        }
+
+        .stats::-webkit-scrollbar {
+            display: none
+        }
+
+        .stat {
+            flex-shrink: 0;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 10px 14px;
+            min-width: 100px
+        }
+
+        .stat .val {
+            font-size: 18px;
+            font-weight: 800;
+            color: #e2e8f0
+        }
+
+        .stat .lbl {
+            font-size: 10px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 2px
+        }
+    </style>
+</head>
+
+<body>
+    <div class="safe-top"></div>
+
+    <!-- Header -->
+    <div class="header">
+        <h1>📅 ERP Agenda</h1>
+        <div class="subtitle">Design & Creation di Nicola Guerra</div>
+        <div class="header-actions">
+            <button class="btn-primary" onclick="openModal()">＋ Nuovo Evento</button>
+            <button class="btn-secondary" onclick="loadEvents()">🔄 Aggiorna</button>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats" id="stats-bar"></div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab active" onclick="setFilter('all',this)">Tutti</button>
+        <button class="tab" onclick="setFilter('Appuntamento',this)">📋 Visite</button>
+        <button class="tab" onclick="setFilter('Sopralluogo',this)">🔍 Sopral.</button>
+        <button class="tab" onclick="setFilter('Consegna',this)">📦 Conseg.</button>
+        <button class="tab" onclick="setFilter('Scadenza',this)">⏰ Scad.</button>
+    </div>
+
+    <!-- Desktop Link -->
+    <div class="text-center py-2 bg-slate-900">
+        <a href="/" class="text-xs text-indigo-400 hover:text-indigo-300 underline">Vai alla versione Desktop Completa
+            (PC)</a>
+    </div>
+
+    <!-- Content -->
+    <div class="content" id="events-container"></div>
+
+    <!-- New Event Modal -->
+    <div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+        <div class="modal">
+            <div class="handle"></div>
+            <h2 id="modal-title">Nuovo Evento</h2>
+            <form id="event-form" onsubmit="saveEvent(event)">
+                <input type="hidden" name="id" id="ev-id">
+                <div class="form-group">
+                    <label>Titolo</label>
+                    <input type="text" name="title" id="ev-title" required placeholder="Es. Sopralluogo Via Roma">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Data</label>
+                        <input type="date" name="date" id="ev-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Ora</label>
+                        <input type="time" name="time" id="ev-time">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <select name="type" id="ev-type">
+                        <option value="Appuntamento">📋 Appuntamento</option>
+                        <option value="Sopralluogo">🔍 Sopralluogo</option>
+                        <option value="Consegna">📦 Consegna</option>
+                        <option value="Scadenza">⏰ Scadenza</option>
+                        <option value="Altro">📌 Altro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Cliente</label>
+                    <select name="clientId" id="ev-client">
+                        <option value="">-- Nessuno --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Cantiere</label>
+                    <select name="projectId" id="ev-project">
+                        <option value="">-- Nessuno --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Note</label>
+                    <textarea name="description" id="ev-description" rows="3"
+                        placeholder="Dettagli aggiuntivi..."></textarea>
+                </div>
+                <button type="submit" class="save-btn">💾 Salva Evento</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Install prompt -->
+    <div class="install-bar" id="install-bar">
+        <span>📲 Installa l'app</span>
+        <button onclick="installApp()">Installa</button>
+    </div>
+
+    <script>
+        // ===== STATE =====
+        let allEvents = [];
+        let clients = [];
+        let projects = [];
+        let currentFilter = 'all';
+        let deferredPrompt = null;
+
+        const API = window.location.origin;
+
+        // ===== INIT =====
+        document.addEventListener('DOMContentLoaded', () => {
+            loadEvents();
+            loadClients();
+            loadProjects();
+            // Register SW
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/static/sw.js').catch(e => console.log('SW err', e));
+            }
+        });
+
+        // PWA Install
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('install-bar').classList.add('show');
+        });
+
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(() => {
+                    document.getElementById('install-bar').classList.remove('show');
+                    deferredPrompt = null;
+                });
+            }
+        }
+
+        // ===== DATA LOADING =====
+        async function loadEvents() {
+            try {
+                const res = await fetch(`${API}/api/events`);
+                allEvents = await res.json();
+                renderEvents();
+            } catch (e) {
+                document.getElementById('events-container').innerHTML = '<div class="empty"><div class="icon">⚠️</div><p>Impossibile connettersi al server.<br>Verifica che il PC sia acceso.</p></div>';
+            }
+        }
+
+        async function loadClients() {
+            try {
+                const res = await fetch(`${API}/api/clients`);
+                clients = await res.json();
+            } catch (e) { }
+        }
+
+        async function loadProjects() {
+            try {
+                const res = await fetch(`${API}/api/projects`);
+                projects = await res.json();
+            } catch (e) { }
+        }
+
+        // ===== RENDERING =====
+        function renderEvents() {
+            const container = document.getElementById('events-container');
+
+            let filtered = currentFilter === 'all' ? allEvents : allEvents.filter(e => e.type === currentFilter);
+
+            if (!filtered.length) {
+                container.innerHTML = '<div class="empty"><div class="icon">📭</div><p>Nessun evento trovato</p></div>';
+                updateStats();
+                return;
+            }
+
+            // Group by date
+            const grouped = {};
+            filtered.forEach(e => { (grouped[e.date] = grouped[e.date] || []).push(e); });
+
+            const today = new Date().toISOString().split('T')[0];
+            let html = '';
+
+            Object.keys(grouped).sort().forEach(date => {
+                const isToday = date === today;
+                const isPast = date < today;
+                const dateObj = new Date(date);
+                const dateStr = dateObj.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' });
+
+                html += `<div class="day-header ${isToday ? 'today' : isPast ? 'past' : ''}"><div class="dot"></div>${isToday ? '📍 OGGI · ' : ''}${dateStr}</div>`;
+
+                grouped[date].forEach(ev => {
+                    const typeLower = (ev.type || 'altro').toLowerCase();
+                    html += `
+                <div class="event-card ${ev.completed ? 'completed' : ''}" onclick="editEvent('${ev.id}')">
+                    <div class="event-type-bar type-${typeLower}"></div>
+                    <div class="event-info">
+                        <div class="event-title">${ev.completed ? '✓ ' : ''}${ev.title}</div>
+                        <div class="event-meta">
+                            ${ev.time ? `<span>🕐 ${ev.time}</span>` : ''}
+                            <span class="type-badge badge-${typeLower}">${ev.type}</span>
+                            ${ev.client_name ? `<span>👤 ${ev.client_name}</span>` : ''}
+                            ${ev.project_name ? `<span>🏗️ ${ev.project_name}</span>` : ''}
+                        </div>
+                        ${ev.description ? `<div style="font-size:12px;color:#64748b;margin-top:4px">${ev.description}</div>` : ''}
+                    </div>
+                    <div class="event-actions">
+                        <button class="check-btn ${ev.completed ? 'done' : ''}" onclick="event.stopPropagation();toggleEvent('${ev.id}')">
+                            ${ev.completed ? '✓' : ''}
+                        </button>
+                        <button class="delete-btn" onclick="event.stopPropagation();deleteEvent('${ev.id}')">🗑️</button>
+                    </div>
+                </div>
+            `;
+                });
+            });
+
+            container.innerHTML = html;
+            updateStats();
+        }
+
+        function updateStats() {
+            const today = new Date().toISOString().split('T')[0];
+            const todayEvents = allEvents.filter(e => e.date === today);
+            const upcoming = allEvents.filter(e => e.date > today && !e.completed);
+            const completed = allEvents.filter(e => e.completed);
+            const overdue = allEvents.filter(e => e.date < today && !e.completed);
+
+            document.getElementById('stats-bar').innerHTML = `
+        <div class="stat"><div class="val">${todayEvents.length}</div><div class="lbl">Oggi</div></div>
+        <div class="stat"><div class="val" style="color:#4f46e5">${upcoming.length}</div><div class="lbl">Prossimi</div></div>
+        <div class="stat"><div class="val" style="color:#22c55e">${completed.length}</div><div class="lbl">Completati</div></div>
+        ${overdue.length ? `<div class="stat"><div class="val" style="color:#ef4444">${overdue.length}</div><div class="lbl">Scaduti</div></div>` : ''}
+    `;
+        }
+
+        function setFilter(filter, btn) {
+            currentFilter = filter;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            renderEvents();
+        }
+
+        // ===== MODAL =====
+        function openModal() {
+            document.getElementById('modal-title').textContent = 'Nuovo Evento';
+            document.getElementById('event-form').reset();
+            document.getElementById('ev-id').value = '';
+            document.getElementById('ev-date').value = new Date().toISOString().split('T')[0];
+
+            // Populate dropdowns
+            const cSel = document.getElementById('ev-client');
+            cSel.innerHTML = '<option value="">-- Nessuno --</option>';
+            clients.forEach(c => { cSel.innerHTML += `<option value="${c.id}" data-name="${c.name}">${c.name}</option>`; });
+
+            const pSel = document.getElementById('ev-project');
+            pSel.innerHTML = '<option value="">-- Nessuno --</option>';
+            projects.forEach(p => { pSel.innerHTML += `<option value="${p.id}" data-name="${p.name}">${p.name}</option>`; });
+
+            document.getElementById('modal-overlay').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').classList.remove('show');
+        }
+
+        function editEvent(id) {
+            const ev = allEvents.find(e => e.id === id);
+            if (!ev) return;
+
+            openModal();
+            document.getElementById('modal-title').textContent = 'Modifica Evento';
+            document.getElementById('ev-id').value = ev.id;
+            document.getElementById('ev-title').value = ev.title;
+            document.getElementById('ev-date').value = ev.date;
+            document.getElementById('ev-time').value = ev.time || '';
+            document.getElementById('ev-type').value = ev.type || 'Appuntamento';
+            document.getElementById('ev-description').value = ev.description || '';
+            if (ev.client_id) document.getElementById('ev-client').value = ev.client_id;
+            if (ev.project_id) document.getElementById('ev-project').value = ev.project_id;
+        }
+
+        // ===== API CALLS =====
+        async function saveEvent(e) {
+            e.preventDefault();
+            const form = document.getElementById('event-form');
+            const cSel = document.getElementById('ev-client');
+            const pSel = document.getElementById('ev-project');
+
+            const data = {
+                id: document.getElementById('ev-id').value || null,
+                title: document.getElementById('ev-title').value,
+                date: document.getElementById('ev-date').value,
+                time: document.getElementById('ev-time').value || null,
+                type: document.getElementById('ev-type').value,
+                description: document.getElementById('ev-description').value || null,
+                clientId: cSel.value || null,
+                clientName: cSel.selectedOptions[0]?.dataset?.name || null,
+                projectId: pSel.value || null,
+                projectName: pSel.selectedOptions[0]?.dataset?.name || null,
+            };
+
+            try {
+                await fetch(`${API}/api/events`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                closeModal();
+                loadEvents();
+                // Vibrate for feedback
+                if (navigator.vibrate) navigator.vibrate(50);
+            } catch (e) {
+                alert('Errore di connessione');
+            }
+        }
+
+        async function toggleEvent(id) {
+            try {
+                await fetch(`${API}/api/events/${id}/toggle`, { method: 'PUT' });
+                if (navigator.vibrate) navigator.vibrate(30);
+                loadEvents();
+            } catch (e) { alert('Errore'); }
+        }
+
+        async function deleteEvent(id) {
+            if (!confirm('Eliminare questo evento?')) return;
+            try {
+                await fetch(`${API}/api/events/${id}`, { method: 'DELETE' });
+                loadEvents();
+            } catch (e) { alert('Errore'); }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,72 @@
+
+═══════════════════════════════════════════════════════════
+  MiniERP - Design & Creation di Nicola Guerra
+  ISTRUZIONI INSTALLAZIONE SU ALTRO PC
+═══════════════════════════════════════════════════════════
+
+REQUISITI:
+  - Windows 10 o 11
+  - Connessione Internet (solo per l'installazione)
+
+────────────────────────────────────────────────────────────
+PASSO 1: Installa Python
+────────────────────────────────────────────────────────────
+
+  1. Vai su: https://www.python.org/downloads/
+  2. Clicca "Download Python 3.x.x"
+  3. Lancia l'installer
+  4. ⚠️  IMPORTANTE: Spunta "Add Python to PATH" in basso!
+  5. Clicca "Install Now"
+  6. Riavvia il PC
+
+────────────────────────────────────────────────────────────
+PASSO 2: Copia la cartella
+────────────────────────────────────────────────────────────
+
+  Copia TUTTA la cartella "Nicola_ERP" sul Desktop
+  dell'altro PC (via chiavetta USB, cloud, ecc.)
+
+────────────────────────────────────────────────────────────
+PASSO 3: Installa le dipendenze
+────────────────────────────────────────────────────────────
+
+  Doppio clic su "INSTALLA.bat"
+  (si installeranno Flask e Pillow automaticamente)
+
+────────────────────────────────────────────────────────────
+PASSO 4: Avvia!
+────────────────────────────────────────────────────────────
+
+  Doppio clic su "run.bat"
+  Si aprirà il browser con l'ERP!
+
+
+────────────────────────────────────────────────────────────
+APP TELEFONO
+────────────────────────────────────────────────────────────
+
+  1. Connetti il telefono alla stessa rete WiFi
+  2. Sul PC apri un terminale e scrivi: ipconfig
+  3. Cerca "IPv4 Address" (es. 192.168.1.XXX)
+  4. Sul telefono apri Chrome: http://192.168.1.XXX:5000/app
+  5. Clicca "Aggiungi a schermata Home"
+
+═══════════════════════════════════════════════════════════
+DOMANDE FREQUENTI (FAQ)
+═══════════════════════════════════════════════════════════
+
+Q: Ho bisogno di XAMPP o Apache?
+A: NO. Questa applicazione è scritta in Python e include già
+   il suo server web integrato (molto più leggero di XAMPP).
+   XAMPP serve per applicazioni PHP (come WordPress), mentre
+   qui usiamo Python/Flask. Avviare "run.bat" è tutto ciò che serve.
+
+Q: Posso usare MySQL invece di SQLite?
+A: Sì, ma richiederebbe modifiche al codice. Per un utilizzo
+   fino a 10-20 utenti concorrenti, SQLite (incluso) è
+   perfetto, veloce e non richiede configurazione.
+
+Q: I dati sono al sicuro?
+A: Sì, sono tutti salvati nel file "erp.sqlite" sul tuo PC.
+   Fai un backup di questo file ogni tanto per sicurezza.
+═══════════════════════════════════════════════════════════

@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MiniERP - Gestione Aziendale</title>
+    <script src="/static/js/tailwindcss.js"></script>
+    <script src="/static/js/lucide.js"></script>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+    </style>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .hidden-view {
+            display: none !important;
+        }
+
+        .stat-card {
+            transition: transform 0.15s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-900 font-sans antialiased">
+    <div class="flex min-h-screen">
+
+        <!-- Sidebar -->
+        <!-- Overlay per chiudere il drawer mobile -->
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden" onclick="closeSidebar()">
+        </div>
+
+        <aside id="sidebar"
+            class="flex flex-col w-64 bg-white border-r border-slate-200 fixed h-full z-40 print:hidden -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+            <div class="p-6 border-b border-slate-100">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-lg">M</span>
+                    </div>
+                    <span class="text-xl font-bold text-slate-800">MiniERP</span>
+                </div>
+                <p class="text-xs text-slate-400 mt-1">Gestione Aziendale Completa</p>
+            </div>
+            <nav class="flex-1 p-4 space-y-1 overflow-y-auto" id="sidebar-nav">
+                <button onclick="navigateTo('dashboard')" id="nav-dashboard"
+                    class="nav-item w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors text-indigo-700 bg-indigo-50">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+                </button>
+                <p class="text-xs text-slate-400 uppercase tracking-wider px-4 pt-3 pb-1">Commerciale</p>
+                <button onclick="navigateTo('crm')" id="nav-crm"
+                    class="nav-item w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors text-slate-600 hover:bg-slate-50">
+                    <i data-lucide="users" class="w-4 h-4"></i> Clienti (CRM)
+                </button>
+                <button onclick="navigateTo('sales')" id="nav-sales"
+                    class="nav-item w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors text-slate-600 hover:bg-slate-50">
+                    <i data-lucide="file-text" class="w-4 h-4"></i> Offerte
+                </button>
+                <button onclick="navigateTo('invoices')" id="nav-invoices"
+                    class="nav-item w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors text-slate-600 hover:bg-slate-50">
+                    <i data-lucide="receipt" class="w-4 h-4"></i> Fatture
+                </button>
+                <p class="text-xs text-slate-400 uppercase tracking-wider px-4 pt-3 pb-1">Operativo</p>
+                <button onclick="navigateTo('projects')" id="nav-projects"
+                    class="nav-item w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors text-slate-600 hover:bg-slate-50">
+                    <i data-lucide="hard-hat" class="w-4 h-4"></i> Cantieri
+                </button>
+                <button onclick="navigateTo('inventory')" id="nav-inventory"
+                    class="nav-item w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors text-slate-600 hover:bg-slate-50">
+                    <i data-lucide="package" class="w-4 h-4"></i> Listini
+                </button>
+                <button onclick="navigateTo('suppliers')" id="nav-suppliers"
+                    class="nav-item w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors text-slate-600 hover:bg-slate-50">
+                    <i data-lucide="truck" class="w-4 h-4"></i> Fornitori
+                </button>
+                <button onclick="navigateTo('expenses')" id="nav-expenses"
+                    class="nav-item w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors text-slate-600 hover:bg-slate-50">
+                    <i data-lucide="wallet" class="w-4 h-4"></i> Spese
+                </button>
+                <p class="text-xs text-slate-400 uppercase tracking-wider px-4 pt-3 pb-1">Strumenti</p>
+                <button onclick="navigateTo('calendar')" id="nav-calendar"
+                    class="nav-item w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors text-slate-600 hover:bg-slate-50">
+                    <i data-lucide="calendar" class="w-4 h-4"></i> Calendario
+                </button>
+                <button onclick="navigateTo('deadlines')" id="nav-deadlines"
+                    class="nav-item w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors text-slate-600 hover:bg-slate-50">
+                    <i data-lucide="clock" class="w-4 h-4"></i> Scadenziario
+                </button>
+                <button onclick="navigateTo('reports')" id="nav-reports"
+                    class="nav-item w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors text-slate-600 hover:bg-slate-50">
+                    <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Report
+                </button>
+            </nav>
+            <!-- Footer Sidebar: Utente + Logout -->
+            <div class="p-4 border-t border-slate-100 print:hidden">
+                <div class="flex items-center gap-3 px-2 py-2">
+                    <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
+                        <i data-lucide="user" class="w-4 h-4 text-indigo-600"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-slate-800 truncate">{{ username }}</p>
+                        <p class="text-xs text-slate-400">Operatore</p>
+                    </div>
+                    <a href="/logout" title="Esci"
+                        class="p-1.5 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Mobile Header -->
+        <div
+            class="md:hidden fixed top-0 left-0 right-0 bg-white border-b border-slate-200 px-4 h-14 flex justify-between items-center z-20 print:hidden">
+            <div class="flex items-center gap-2">
+                <div class="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center">
+                    <span class="text-white font-bold text-sm">M</span>
+                </div>
+                <span class="font-bold text-slate-800">MiniERP</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="/logout"
+                    class="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                </a>
+                <button onclick="openSidebar()"
+                    class="p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+
+
+        <!-- Main Content -->
+        <main class="flex-1 md:ml-64 p-4 md:p-6 pt-16 md:pt-6 pb-20 md:pb-6 print:m-0 print:p-0 print:w-full">
+            <div class="max-w-7xl mx-auto" id="main-container">
+
+                <!-- DASHBOARD -->
+                <div id="view-dashboard" class="view-section">
+                    <h1 class="text-2xl font-bold mb-6">Dashboard</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6" id="dash-cards"></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                            <h3 class="font-semibold mb-4">Prossimi Appuntamenti</h3>
+                            <div id="dash-events" class="space-y-2 text-sm"></div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                            <h3 class="font-semibold mb-4">Fatture Scadute</h3>
+                            <div id="dash-overdue" class="space-y-2 text-sm"></div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                            <h3 class="font-semibold mb-4">Top Clienti</h3>
+                            <div id="dash-top-clients" class="space-y-2 text-sm"></div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                            <h3 class="font-semibold mb-4">Spese per Categoria</h3>
+                            <div id="dash-expense-cats" class="space-y-2 text-sm"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CRM -->
+                <div id="view-crm" class="view-section hidden-view">
+                    <div class="flex justify-between items-center mb-6">
+                        <h1 class="text-2xl font-bold">Gestione Clienti</h1>
+                        <button onclick="crmOpenModal()"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"><i
+                                data-lucide="plus" class="w-4 h-4"></i> Nuovo Cliente</button>
+                    </div>
+                    <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-50 border-b border-slate-200">
+                                <tr>
+                                    <th class="px-6 py-4 font-semibold">Cliente</th>
+                                    <th class="px-6 py-4 font-semibold">Contatti</th>
+                                    <th class="px-6 py-4 font-semibold">Tipo</th>
+                                    <th class="px-6 py-4 font-semibold text-right">Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody id="crm-table-body" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- INVENTORY -->
+                <div id="view-inventory" class="view-section hidden-view">
+                    <div class="flex justify-between items-center mb-6">
+                        <h1 class="text-2xl font-bold">Articoli & Listini</h1>
+                        <button onclick="invOpenModal()"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"><i
+                                data-lucide="plus" class="w-4 h-4"></i> Nuovo Articolo</button>
+                    </div>
+                    <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-50 border-b border-slate-200">
+                                <tr>
+                                    <th class="px-6 py-4 font-semibold">Codice</th>
+                                    <th class="px-6 py-4 font-semibold">Descrizione</th>
+                                    <th class="px-6 py-4 font-semibold">Unità</th>
+                                    <th class="px-6 py-4 font-semibold text-right">Prezzo</th>
+                                    <th class="px-6 py-4 font-semibold text-right">Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inv-table-body" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SALES -->
+                <div id="view-sales" class="view-section hidden-view">
+                    <div class="flex justify-between items-center mb-6">
+                        <h1 class="text-2xl font-bold">Offerte & Preventivi</h1>
+                        <button onclick="salesOpenModal()"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"><i
+                                data-lucide="plus" class="w-4 h-4"></i> Crea Offerta</button>
+                    </div>
+                    <div class="grid grid-cols-1 gap-4" id="sales-list"></div>
+                </div>
+
+                <!-- INVOICES -->
+                <div id="view-invoices" class="view-section hidden-view">
+                    <div class="flex justify-between items-center mb-6">
+                        <h1 class="text-2xl font-bold">Fatture</h1>
+                        <button onclick="invOpenInvoiceModal()"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"><i
+                                data-lucide="plus" class="w-4 h-4"></i> Nuova Fattura</button>
+                    </div>
+                    <div class="grid grid-cols-1 gap-4" id="invoices-list"></div>
+                </div>
+
+                <!-- PROJECTS -->
+                <div id="view-projects" class="view-section hidden-view">
+                    <div class="flex justify-between items-center mb-6">
+                        <h1 class="text-2xl font-bold">Cantieri / Progetti</h1>
+                        <button onclick="projOpenModal()"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"><i
+                                data-lucide="plus" class="w-4 h-4"></i> Nuovo Cantiere</button>
+                    </div>
+                    <div class="grid grid-cols-1 gap-4" id="projects-list"></div>
+                </div>
+
+                <!-- SUPPLIERS -->
+                <div id="view-suppliers" class="view-section hidden-view">
+                    <div class="flex justify-between items-center mb-6">
+                        <h1 class="text-2xl font-bold">Fornitori</h1>
+                        <button onclick="suppOpenModal()"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"><i
+                                data-lucide="plus" class="w-4 h-4"></i> Nuovo Fornitore</button>
+                    </div>
+                    <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-50 border-b border-slate-200">
+                                <tr>
+                                    <th class="px-6 py-4 font-semibold">Fornitore</th>
+                                    <th class="px-6 py-4 font-semibold">Categoria</th>
+                                    <th class="px-6 py-4 font-semibold">Contatti</th>
+                                    <th class="px-6 py-4 font-semibold text-right">Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody id="supp-table-body" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- EXPENSES -->
+                <div id="view-expenses" class="view-section hidden-view">
+                    <div class="flex justify-between items-center mb-6">
+                        <h1 class="text-2xl font-bold">Gestione Spese</h1>
+                        <button onclick="expOpenModal()"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"><i
+                                data-lucide="plus" class="w-4 h-4"></i> Nuova Spesa</button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6" id="exp-summary"></div>
+                    <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-50 border-b border-slate-200">
+                                <tr>
+                                    <th class="px-6 py-4 font-semibold">Data</th>
+                                    <th class="px-6 py-4 font-semibold">Descrizione</th>
+                                    <th class="px-6 py-4 font-semibold">Categoria</th>
+                                    <th class="px-6 py-4 font-semibold">Cantiere</th>
+                                    <th class="px-6 py-4 font-semibold text-right">Importo</th>
+                                    <th class="px-6 py-4 font-semibold text-right">Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody id="exp-table-body" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- CALENDAR -->
+                <div id="view-calendar" class="view-section hidden-view">
+                    <div class="flex justify-between items-center mb-6">
+                        <h1 class="text-2xl font-bold">Calendario / Agenda</h1>
+                        <button onclick="calOpenModal()"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"><i
+                                data-lucide="plus" class="w-4 h-4"></i> Nuovo Evento</button>
+                    </div>
+                    <div class="grid grid-cols-1 gap-3" id="cal-list"></div>
+                </div>
+
+                <!-- DEADLINES -->
+                <div id="view-deadlines" class="view-section hidden-view">
+                    <h1 class="text-2xl font-bold mb-6">Scadenziario Pagamenti</h1>
+                    <div class="grid grid-cols-1 gap-3" id="deadlines-list"></div>
+                </div>
+
+                <!-- REPORTS -->
+                <div id="view-reports" class="view-section hidden-view">
+                    <h1 class="text-2xl font-bold mb-6">Report & Statistiche</h1>
+                    <div id="reports-content"></div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- ===================== MODALS ===================== -->
+
+    <!-- CRM MODAL -->
+    <div id="crm-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="font-bold text-lg">Cliente</h3>
+                <button onclick="crmCloseModal()"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="crm-form" onsubmit="crmSave(event)" class="p-4 space-y-4">
+                <input type="hidden" name="id">
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Tipo</label><select name="type"
+                            class="w-full border rounded-lg p-2 text-sm" onchange="crmToggleFields()">
+                            <option value="private">Privato</option>
+                            <option value="company">Azienda</option>
+                        </select></div>
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Nome / Ragione
+                            Sociale</label><input type="text" name="name" required
+                            class="w-full border rounded-lg p-2 text-sm"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Email</label><input type="email"
+                            name="email" class="w-full border rounded-lg p-2 text-sm"></div>
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Telefono</label><input type="tel"
+                            name="phone" class="w-full border rounded-lg p-2 text-sm"></div>
+                </div>
+                <div><label class="block text-xs font-medium text-slate-500 mb-1">Indirizzo</label><input type="text"
+                        name="address" required class="w-full border rounded-lg p-2 text-sm"></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Codice
+                            Fiscale</label><input type="text" name="cf" class="w-full border rounded-lg p-2 text-sm">
+                    </div>
+                    <div id="crm-vat-field" class="hidden"><label
+                            class="block text-xs font-medium text-slate-500 mb-1">P.IVA</label><input type="text"
+                            name="vat" class="w-full border rounded-lg p-2 text-sm"></div>
+                </div>
+                <div class="pt-4 flex justify-end gap-2">
+                    <button type="button" onclick="crmCloseModal()"
+                        class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Annulla</button>
+                    <button type="submit"
+                        class="px-4 py-2 text-sm text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg">Salva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- INVENTORY MODAL -->
+    <div id="inv-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="font-bold text-lg">Articolo</h3>
+                <button onclick="invCloseModal()"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="inv-form" onsubmit="invSave(event)" class="p-4 space-y-4">
+                <input type="hidden" name="id">
+                <div class="grid grid-cols-3 gap-4">
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Codice</label><input type="text"
+                            name="code" required class="w-full border rounded-lg p-2 text-sm"></div>
+                    <div class="col-span-2"><label
+                            class="block text-xs font-medium text-slate-500 mb-1">Descrizione</label><input type="text"
+                            name="description" required class="w-full border rounded-lg p-2 text-sm"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Unità</label><select name="unit"
+                            class="w-full border rounded-lg p-2 text-sm">
+                            <option value="mq">mq</option>
+                            <option value="ml">ml</option>
+                            <option value="cad">cad</option>
+                            <option value="corpo">corpo</option>
+                            <option value="kg">kg</option>
+                            <option value="h">ore</option>
+                        </select></div>
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Prezzo (€)</label><input
+                            type="number" step="0.01" name="price" required
+                            class="w-full border rounded-lg p-2 text-sm"></div>
+                </div>
+                <div class="pt-4 flex justify-end gap-2">
+                    <button type="button" onclick="invCloseModal()"
+                        class="px-4 py-2 text-sm text-slate-600 rounded-lg">Annulla</button>
+                    <button type="submit" class="px-4 py-2 text-sm text-white bg-indigo-600 rounded-lg">Salva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SUPPLIER MODAL -->
+    <div id="supp-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="font-bold text-lg">Fornitore</h3>
+                <button onclick="suppCloseModal()"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="supp-form" onsubmit="suppSave(event)" class="p-4 space-y-4">
+                <input type="hidden" name="id">
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Nome</label><input type="text"
+                            name="name" required class="w-full border rounded-lg p-2 text-sm"></div>
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Categoria</label><select
+                            name="category" class="w-full border rounded-lg p-2 text-sm">
+                            <option value="Materiali">Materiali</option>
+                            <option value="Noleggio">Noleggio</option>
+                            <option value="Trasporto">Trasporto</option>
+                            <option value="Servizi">Servizi</option>
+                            <option value="Altro">Altro</option>
+                        </select></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">P.IVA</label><input type="text"
+                            name="vat" class="w-full border rounded-lg p-2 text-sm"></div>
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">CF</label><input type="text"
+                            name="cf" class="w-full border rounded-lg p-2 text-sm"></div>
+                </div>
+                <div><label class="block text-xs font-medium text-slate-500 mb-1">Indirizzo</label><input type="text"
+                        name="address" class="w-full border rounded-lg p-2 text-sm"></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Email</label><input type="email"
+                            name="email" class="w-full border rounded-lg p-2 text-sm"></div>
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Telefono</label><input type="tel"
+                            name="phone" class="w-full border rounded-lg p-2 text-sm"></div>
+                </div>
+                <div><label class="block text-xs font-medium text-slate-500 mb-1">Note</label><textarea name="notes"
+                        rows="2" class="w-full border rounded-lg p-2 text-sm"></textarea></div>
+                <div class="pt-4 flex justify-end gap-2">
+                    <button type="button" onclick="suppCloseModal()"
+                        class="px-4 py-2 text-sm text-slate-600 rounded-lg">Annulla</button>
+                    <button type="submit" class="px-4 py-2 text-sm text-white bg-indigo-600 rounded-lg">Salva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- EXPENSE MODAL -->
+    <div id="exp-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="font-bold text-lg">Spesa</h3>
+                <button onclick="expCloseModal()"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="exp-form" onsubmit="expSave(event)" class="p-4 space-y-4">
+                <input type="hidden" name="id">
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Data</label><input type="date"
+                            name="date" required class="w-full border rounded-lg p-2 text-sm"></div>
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Importo (€)</label><input
+                            type="number" step="0.01" name="amount" required
+                            class="w-full border rounded-lg p-2 text-sm"></div>
+                </div>
+                <div><label class="block text-xs font-medium text-slate-500 mb-1">Descrizione</label><input type="text"
+                        name="description" required class="w-full border rounded-lg p-2 text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Categoria</label><select
+                            name="category" class="w-full border rounded-lg p-2 text-sm">
+                            <option value="Materiali">Materiali</option>
+                            <option value="Trasporto">Trasporto</option>
+                            <option value="Manodopera">Manodopera</option>
+                            <option value="Utenze">Utenze</option>
+                            <option value="Attrezzatura">Attrezzatura</option>
+                            <option value="Altro">Altro</option>
+                        </select></div>
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Metodo
+                            Pagamento</label><select name="paymentMethod" class="w-full border rounded-lg p-2 text-sm">
+                            <option value="Bonifico">Bonifico</option>
+                            <option value="Contanti">Contanti</option>
+                            <option value="Carta">Carta</option>
+                        </select></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Fornitore</label><select
+                            name="supplierId" id="exp-supplier-select" class="w-full border rounded-lg p-2 text-sm">
+                            <option value="">-- Nessuno --</option>
+                        </select></div>
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Cantiere</label><select
+                            name="projectId" id="exp-project-select" class="w-full border rounded-lg p-2 text-sm">
+                            <option value="">-- Nessuno --</option>
+                        </select></div>
+                </div>
+                <div><label class="block text-xs font-medium text-slate-500 mb-1">Note</label><textarea name="notes"
+                        rows="2" class="w-full border rounded-lg p-2 text-sm"></textarea></div>
+                <div class="pt-4 flex justify-end gap-2">
+                    <button type="button" onclick="expCloseModal()"
+                        class="px-4 py-2 text-sm text-slate-600 rounded-lg">Annulla</button>
+                    <button type="submit" class="px-4 py-2 text-sm text-white bg-indigo-600 rounded-lg">Salva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- PROJECT MODAL -->
+    <div id="proj-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="font-bold text-lg">Cantiere / Progetto</h3>
+                <button onclick="projCloseModal()"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="proj-form" onsubmit="projSave(event)" class="p-4 space-y-4">
+                <input type="hidden" name="id">
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Nome
+                            Cantiere</label><input type="text" name="name" required
+                            class="w-full border rounded-lg p-2 text-sm"></div>
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Cliente</label><select
+                            name="clientId" id="proj-client-select" class="w-full border rounded-lg p-2 text-sm">
+                            <option value="">-- Nessuno --</option>
+                        </select></div>
+                </div>
+                <div><label class="block text-xs font-medium text-slate-500 mb-1">Indirizzo
+                        Cantiere</label><input type="text" name="address" class="w-full border rounded-lg p-2 text-sm">
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Data Inizio</label><input
+                            type="date" name="startDate" class="w-full border rounded-lg p-2 text-sm"></div>
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Data Fine</label><input
+                            type="date" name="endDate" class="w-full border rounded-lg p-2 text-sm"></div>
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Budget (€)</label><input
+                            type="number" step="0.01" name="budget" class="w-full border rounded-lg p-2 text-sm"></div>
+                </div>
+                <div><label class="block text-xs font-medium text-slate-500 mb-1">Stato</label><select name="status"
+                        class="w-full border rounded-lg p-2 text-sm">
+                        <option value="Pianificato">Pianificato</option>
+                        <option value="In Corso">In Corso</option>
+                        <option value="Completato">Completato</option>
+                        <option value="Chiuso">Chiuso</option>
+                    </select></div>
+                <div><label class="block text-xs font-medium text-slate-500 mb-1">Note</label><textarea name="notes"
+                        rows="2" class="w-full border rounded-lg p-2 text-sm"></textarea></div>
+                <div class="pt-4 flex justify-end gap-2">
+                    <button type="button" onclick="projCloseModal()"
+                        class="px-4 py-2 text-sm text-slate-600 rounded-lg">Annulla</button>
+                    <button type="submit" class="px-4 py-2 text-sm text-white bg-indigo-600 rounded-lg">Salva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- CALENDAR EVENT MODAL -->
+    <div id="cal-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="font-bold text-lg">Evento / Appuntamento</h3>
+                <button onclick="calCloseModal()"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="cal-form" onsubmit="calSave(event)" class="p-4 space-y-4">
+                <input type="hidden" name="id">
+                <div><label class="block text-xs font-medium text-slate-500 mb-1">Titolo</label><input type="text"
+                        name="title" required class="w-full border rounded-lg p-2 text-sm"></div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Data</label><input type="date"
+                            name="date" required class="w-full border rounded-lg p-2 text-sm"></div>
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Ora</label><input type="time"
+                            name="time" class="w-full border rounded-lg p-2 text-sm"></div>
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Tipo</label><select name="type"
+                            class="w-full border rounded-lg p-2 text-sm">
+                            <option value="Appuntamento">Appuntamento</option>
+                            <option value="Sopralluogo">Sopralluogo</option>
+                            <option value="Consegna">Consegna</option>
+                            <option value="Scadenza">Scadenza</option>
+                            <option value="Altro">Altro</option>
+                        </select></div>
+                </div>
+                <div><label class="block text-xs font-medium text-slate-500 mb-1">Descrizione</label><textarea
+                        name="description" rows="2" class="w-full border rounded-lg p-2 text-sm"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Cliente</label><select
+                            name="clientId" id="cal-client-select" class="w-full border rounded-lg p-2 text-sm">
+                            <option value="">-- Nessuno --</option>
+                        </select></div>
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Cantiere</label><select
+                            name="projectId" id="cal-project-select" class="w-full border rounded-lg p-2 text-sm">
+                            <option value="">-- Nessuno --</option>
+                        </select></div>
+                </div>
+                <div class="pt-4 flex justify-end gap-2">
+                    <button type="button" onclick="calCloseModal()"
+                        class="px-4 py-2 text-sm text-slate-600 rounded-lg">Annulla</button>
+                    <button type="submit" class="px-4 py-2 text-sm text-white bg-indigo-600 rounded-lg">Salva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- INVOICE MODAL -->
+    <div id="invoice-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="font-bold text-lg">Fattura</h3>
+                <button onclick="invCloseInvoiceModal()"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="invoice-form" class="p-4 space-y-4">
+                <input type="hidden" name="id">
+                <div class="grid grid-cols-3 gap-4">
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Cliente</label><select
+                            name="clientId" id="inv-invoice-client" class="w-full border rounded-lg p-2 text-sm"
+                            onchange="invInvoiceClientChange()">
+                            <option value="">-- Seleziona --</option>
+                        </select></div>
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Data
+                            Emissione</label><input type="date" name="date" required
+                            class="w-full border rounded-lg p-2 text-sm"></div>
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Data
+                            Scadenza</label><input type="date" name="dueDate"
+                            class="w-full border rounded-lg p-2 text-sm"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Metodo
+                            Pagamento</label><select name="paymentMethod" class="w-full border rounded-lg p-2 text-sm">
+                            <option value="Bonifico">Bonifico</option>
+                            <option value="Contanti">Contanti</option>
+                            <option value="Assegno">Assegno</option>
+                        </select></div>
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Da Offerta</label><select
+                            name="offerId" id="inv-invoice-offer" class="w-full border rounded-lg p-2 text-sm"
+                            onchange="invImportFromOffer()">
+                            <option value="">-- Nessuna --</option>
+                        </select></div>
+                </div>
+                <div>
+                    <div class="flex justify-between items-center mb-2"><label
+                            class="text-xs font-medium text-slate-500">Voci Fattura</label><button type="button"
+                            onclick="invAddInvoiceItem()" class="text-xs text-indigo-600 font-medium">+
+                            Aggiungi</button></div>
+                    <div id="invoice-items-container" class="space-y-2"></div>
+                </div>
+                <div class="grid grid-cols-3 gap-4 bg-slate-50 p-4 rounded-lg">
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Imponibile</label><input
+                            type="number" step="0.01" name="subtotal" readonly
+                            class="w-full border rounded-lg p-2 text-sm bg-white"></div>
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">IVA %</label><input type="number"
+                            name="vatRate" value="22" class="w-full border rounded-lg p-2 text-sm"
+                            onchange="invCalcInvoice()"></div>
+                    <div><label class="block text-xs font-medium text-slate-500 mb-1">Totale</label><input type="number"
+                            step="0.01" name="total" readonly
+                            class="w-full border rounded-lg p-2 text-sm bg-white font-bold"></div>
+                </div>
+                <div><label class="block text-xs font-medium text-slate-500 mb-1">Note</label><textarea name="notes"
+                        rows="2" class="w-full border rounded-lg p-2 text-sm"></textarea></div>
+                <div class="pt-4 flex justify-end gap-2">
+                    <button type="button" onclick="invCloseInvoiceModal()"
+                        class="px-4 py-2 text-sm text-slate-600 rounded-lg">Annulla</button>
+                    <button type="button" onclick="invSaveInvoice()"
+                        class="px-4 py-2 text-sm text-white bg-indigo-600 rounded-lg">Salva Fattura</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SALES MODAL (Full Screen) -->
+    <div id="sales-modal" class="fixed inset-0 bg-white z-50 hidden overflow-y-auto">
+        <div class="max-w-5xl mx-auto p-6">
+            <div class="flex justify-between items-center mb-8 border-b border-slate-100 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800">Nuova Offerta</h2>
+                    <p class="text-sm text-slate-500">Compila i dettagli del preventivo</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="salesCloseModal()"
+                        class="px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg font-medium">Annulla</button>
+                    <button type="button" onclick="salesGeneratePDF()"
+                        class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-medium shadow-sm flex items-center gap-2"><i
+                            data-lucide="printer" class="w-4 h-4"></i> Anteprima PDF</button>
+                    <button onclick="salesSave()"
+                        class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium shadow-sm">Salva</button>
+                </div>
+            </div>
+            <form id="sales-form" class="space-y-8">
+                <input type="hidden" name="id">
+                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                    <h3 class="font-semibold text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="user"
+                            class="w-5 h-5 text-indigo-600"></i> Dati Cliente</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div><label class="block text-sm font-medium text-slate-600 mb-1">Seleziona
+                                Cliente</label><select id="sales-client-select"
+                                class="w-full border rounded-lg p-2.5 bg-white" onchange="salesSelectClient()">
+                                <option value="">-- Seleziona --</option>
+                            </select></div>
+                        <div><label class="block text-sm font-medium text-slate-600 mb-1">Data
+                                Offerta</label><input type="date" name="date" required
+                                class="w-full border rounded-lg p-2.5 bg-white"></div>
+                        <div
+                            class="md:col-span-2 grid grid-cols-3 gap-4 text-sm text-slate-500 bg-white p-4 rounded-lg border">
+                            <div><span
+                                    class="block text-xs font-bold uppercase tracking-wider text-slate-400">Indirizzo</span><span
+                                    id="sales-client-address">-</span></div>
+                            <div><span class="block text-xs font-bold uppercase tracking-wider text-slate-400">P.IVA
+                                    /
+                                    CF</span><span id="sales-client-vat">-</span></div>
+                            <div><span
+                                    class="block text-xs font-bold uppercase tracking-wider text-slate-400">Email</span><span
+                                    id="sales-client-email">-</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-semibold text-slate-800 flex items-center gap-2"><i data-lucide="package"
+                                class="w-5 h-5 text-indigo-600"></i> Articoli e Servizi
+                        </h3>
+                        <button type="button" onclick="salesAddItem()"
+                            class="text-sm text-indigo-600 font-medium hover:text-indigo-800">+ Aggiungi
+                            Riga</button>
+                    </div>
+                    <!-- Modalità Prezzo -->
+                    <div class="mb-4 flex items-center gap-6 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <span class="text-sm font-medium text-slate-600">Tipo Prezzo:</span>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="pricingMode" value="itemized" checked
+                                onchange="salesTogglePricingMode()" class="accent-indigo-600">
+                            <span class="text-sm text-slate-700">Prezzo Dettagliato</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="pricingMode" value="lump_sum" onchange="salesTogglePricingMode()"
+                                class="accent-indigo-600">
+                            <span class="text-sm text-slate-700 font-semibold text-indigo-700">Prezzo a Corpo</span>
+                        </label>
+                    </div>
+                    <!-- Campo importo a corpo (nascosto di default) -->
+                    <div id="lump-sum-row"
+                        class="hidden mb-4 flex items-center gap-4 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+                        <label class="text-sm font-semibold text-indigo-800 whitespace-nowrap">Importo Totale Lordo
+                            (€):</label>
+                        <input type="number" step="0.01" min="0" id="sales-lump-sum-amount" value="0"
+                            placeholder="Inserisci importo lordo complessivo"
+                            class="flex-1 border border-indigo-300 rounded-lg p-2.5 text-right font-bold text-indigo-900 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                            oninput="salesCalcTotals()">
+                        <span class="text-xs text-indigo-600">Lo sconto e l'IVA verranno calcolati su questo
+                            importo</span>
+                    </div>
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-50 text-slate-500">
+                            <tr>
+                                <th class="px-4 py-2 w-1/12">Codice</th>
+                                <th class="px-4 py-2 w-5/12">Descrizione</th>
+                                <th class="px-4 py-2 w-1/12">Unità</th>
+                                <th class="px-4 py-2 w-1/12 text-right">Q.tà</th>
+                                <th class="px-4 py-2 w-2/12 text-right">Prezzo</th>
+                                <th class="px-4 py-2 w-2/12 text-right">Totale</th>
+                                <th class="px-4 py-2 w-10"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="sales-items-body" class="divide-y divide-slate-100"></tbody>
+                        <tfoot class="border-t border-slate-200 font-bold bg-slate-50">
+                            <tr>
+                                <td colspan="5" class="px-4 py-2 text-right text-slate-500 font-normal">Lordo
+                                </td>
+                                <td class="px-4 py-2 text-right" id="sales-gross-total">€ 0,00</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td colspan="5" class="px-4 py-2 text-right text-red-500 font-normal">Sconto (€)
+                                    <input type="number" step="0.01" id="sales-discount" value="0"
+                                        class="w-20 text-right border rounded mx-1 text-sm text-red-600"
+                                        onchange="salesCalcTotals()">
+                                </td>
+                                <td class="px-4 py-2 text-right text-red-500" id="sales-discount-display">- €
+                                    0,00</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td colspan="5" class="px-4 py-3 text-right font-bold">Imponibile Netto</td>
+                                <td class="px-4 py-3 text-right font-bold" id="sales-subtotal">€ 0,00</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td colspan="5" class="px-4 py-2 text-right text-slate-500 font-normal">IVA
+                                    <input type="number" id="sales-vat-rate" value="22"
+                                        class="w-12 text-center border rounded mx-1 text-sm"
+                                        onchange="salesCalcTotals()">%
+                                </td>
+                                <td class="px-4 py-2 text-right text-slate-500 font-normal" id="sales-vat-amount">€ 0,00
+                                </td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td colspan="5" class="px-4 py-3 text-right text-lg text-indigo-700">Totale</td>
+                                <td class="px-4 py-3 text-right text-lg text-indigo-700" id="sales-total">€ 0,00
+                                </td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                        <h3 class="font-semibold text-slate-800 mb-4">Dettagli Lavoro</h3>
+                        <div class="space-y-4">
+                            <div><label class="block text-sm font-medium text-slate-600 mb-1">Luogo di
+                                    esecuzione</label><input type="text" name="worksiteAddress"
+                                    class="w-full border rounded-lg p-2.5 bg-white"></div>
+                            <div><label class="block text-sm font-medium text-slate-600 mb-1">Tempi di
+                                    esecuzione</label><input type="text" name="executionTime"
+                                    placeholder="es. 30 giorni lavorativi"
+                                    class="w-full border rounded-lg p-2.5 bg-white"></div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                        <h3 class="font-semibold text-slate-800 mb-4">Termini e Pagamento</h3>
+                        <div class="space-y-4">
+                            <div><label class="block text-sm font-medium text-slate-600 mb-1">Metodo di
+                                    Pagamento</label><select name="paymentMethod"
+                                    class="w-full border rounded-lg p-2.5 bg-white">
+                                    <option value="Bonifico Bancario">Bonifico Bancario</option>
+                                    <option value="Assegno">Assegno</option>
+                                    <option value="Contanti">Contanti</option>
+                                </select></div>
+                            <div><label class="block text-sm font-medium text-slate-600 mb-1">Termini di
+                                    Pagamento</label><input type="text" name="paymentTerms"
+                                    placeholder="es. Acconto 30%, Saldo 70%"
+                                    class="w-full border rounded-lg p-2.5 bg-white"></div>
+                        </div>
+                    </div>
+                    <div class="col-span-1 md:col-span-2 bg-slate-50 p-6 rounded-xl border border-slate-200">
+                        <h3 class="font-semibold text-slate-800 mb-4">Note (Visibili nel PDF)</h3>
+                        <textarea name="notes" rows="3" placeholder="Note aggiuntive..."
+                            class="w-full border rounded-lg p-2.5 bg-white text-sm"></textarea>
+                    </div>
+                    <div class="col-span-1 md:col-span-2 bg-slate-50 p-6 rounded-xl border border-slate-200">
+                        <h3 class="font-semibold text-slate-800 mb-2">Condizioni Generali di Contratto
+                            (Modificabili)
+                        </h3>
+                        <p class="text-xs text-slate-400 mb-3">Puoi modificare il testo legale qui sotto per
+                            questo
+                            specifico contratto.</p>
+                        <textarea name="legalTerms" rows="8"
+                            class="w-full border rounded-lg p-2.5 bg-white font-mono text-xs">ART. 1 - DEFINIZIONE DEL BENE/SERVIZIO
+1.1. Il servizio/lavoro oggetto del contratto è descritto in modo preciso nel preventivo.
+1.2. Il Cliente non può modificare le specifiche pattuite senza accordo scritto.
+
+ART. 2 - ESECUZIONE E CONSEGNA
+2.1. Il lavoro sarà eseguito a regola d'arte secondo le normative vigenti.
+
+ART. 3 - MODALITA' DI UTILIZZO
+3.1. Il Cliente si impegna a fornire accesso ai locali per l'esecuzione dei lavori.
+
+ART. 4 - LUOGO DI ESECUZIONE
+4.1. I lavori saranno eseguiti nel cantiere indicato nell'ordine.
+
+ART. 5 - DURATA
+5.1. La durata dei lavori è specificata nell'ordine a titolo indicativo.
+
+ART. 6 - TRASPORTO
+6.1. Il costo del trasporto materiali è incluso nel prezzo salvo diverso accordo.
+
+ART. 7 - PREZZI E PAGAMENTI
+7.1. I prezzi si intendono IVA esclusa.
+
+ART. 8 - TRATTAMENTO DATI (GDPR)
+8.1. I dati personali sono trattati ai sensi del Reg. UE 679/2016 per l'esecuzione del contratto.</textarea>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAVIGATION (solo mobile) -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-20 flex items-stretch print:hidden safe-area-bottom"
+        style="padding-bottom: env(safe-area-inset-bottom)">
+        <button id="bottom-nav-dashboard" onclick="navigateTo('dashboard')"
+            class="bottom-nav-item flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-indigo-600 transition-colors">
+            <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+            <span class="text-[10px] font-medium">Home</span>
+        </button>
+        <button id="bottom-nav-crm" onclick="navigateTo('crm')"
+            class="bottom-nav-item flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-slate-500 transition-colors">
+            <i data-lucide="users" class="w-5 h-5"></i>
+            <span class="text-[10px] font-medium">Clienti</span>
+        </button>
+        <button id="bottom-nav-sales" onclick="navigateTo('sales')"
+            class="bottom-nav-item flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-slate-500 transition-colors">
+            <i data-lucide="file-text" class="w-5 h-5"></i>
+            <span class="text-[10px] font-medium">Offerte</span>
+        </button>
+        <button id="bottom-nav-invoices" onclick="navigateTo('invoices')"
+            class="bottom-nav-item flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-slate-500 transition-colors">
+            <i data-lucide="receipt" class="w-5 h-5"></i>
+            <span class="text-[10px] font-medium">Fatture</span>
+        </button>
+        <button id="bottom-nav-projects" onclick="navigateTo('projects')"
+            class="bottom-nav-item flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-slate-500 transition-colors">
+            <i data-lucide="hard-hat" class="w-5 h-5"></i>
+            <span class="text-[10px] font-medium">Cantieri</span>
+        </button>
+        <button onclick="openSidebar()"
+            class="flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-slate-500 transition-colors">
+            <i data-lucide="grid-3x3" class="w-5 h-5"></i>
+            <span class="text-[10px] font-medium">Altro</span>
+        </button>
+    </nav>
+
+    <!-- SCRIPTS -->
+    <script src="/static/js/app.js"></script>
+    <script src="/static/js/crm.js"></script>
+    <script src="/static/js/inventory.js"></script>
+    <script src="/static/js/sales.js"></script>
+    <script src="/static/js/suppliers.js"></script>
+    <script src="/static/js/expenses.js"></script>
+    <script src="/static/js/projects.js"></script>
+    <script src="/static/js/invoices.js"></script>
+    <script src="/static/js/calendar.js"></script>
+    <script src="/static/js/deadlines.js"></script>
+    <script src="/static/js/reports.js"></script>
+    <script>
+        lucide.createIcons();
+        document.addEventListener('DOMContentLoaded', () => {
+            navigateTo('dashboard');
+            loadDashboard();
+        });
+    </script>
+</body>
+
+</html>
