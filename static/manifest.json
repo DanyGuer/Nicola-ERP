@@ -1,12 +1,12 @@
 {
-    "name": "MiniERP Agenda",
-    "short_name": "ERP Agenda",
-    "description": "Gestione Appuntamenti - Design & Creation",
-    "start_url": "/app",
+    "name": "MiniERP - Gestione Aziendale",
+    "short_name": "MiniERP",
+    "description": "Gestione Aziendale Completa - Design & Creation di Nicola Guerra",
+    "start_url": "/",
     "display": "standalone",
-    "background_color": "#0f172a",
+    "background_color": "#f1f5f9",
     "theme_color": "#4f46e5",
-    "orientation": "portrait",
+    "orientation": "any",
     "icons": [
         {
             "src": "/static/img/icon-192.png",

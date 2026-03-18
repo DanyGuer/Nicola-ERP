@@ -85,6 +85,10 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+@app.route('/sw.js')
+def service_worker():
+    return app.send_static_file('sw.js'), 200, {'Content-Type': 'application/javascript', 'Service-Worker-Allowed': '/'}
+
 @app.route('/login', methods=['GET'])
 def login_page():
     if session.get('logged_in'):
