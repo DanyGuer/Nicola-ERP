@@ -17,11 +17,14 @@ function renderInvTable(products) {
     products.forEach(p => {
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50 transition-colors';
+        const badgeColor = p.item_type === 'Note'
+            ? 'bg-slate-100 text-slate-600'
+            : 'bg-blue-100 text-blue-700';
         tr.innerHTML = `
-            <td class="px-6 py-4 font-mono text-xs text-slate-500">${p.code}</td>
+            <td class="px-6 py-4"><span class="px-2 py-1 rounded-full text-xs font-bold ${badgeColor}">${p.item_type || 'Merce'}</span></td>
             <td class="px-6 py-4 font-medium text-slate-900">${p.description}</td>
             <td class="px-6 py-4 text-slate-600">${p.unit}</td>
-            <td class="px-6 py-4 text-right font-medium text-slate-900">${formatCurrency(p.price)}</td>
+            <td class="px-6 py-4 text-right font-medium text-slate-900">${p.item_type === 'Note' ? '—' : formatCurrency(p.price)}</td>
             <td class="px-6 py-4 text-right">
                  <button onclick="deleteProduct('${p.id}')" class="text-red-600 hover:text-red-900 text-xs font-medium">Elimina</button>
             </td>
@@ -45,7 +48,7 @@ async function invSave(e) {
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
     // Convert price to number
-    data.price = parseFloat(data.price);
+    data.price = parseFloat(data.price) || 0;
 
     try {
         const res = await fetch('/api/products', {

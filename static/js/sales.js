@@ -182,7 +182,7 @@ function salesSelectClient() {
 function salesAddItem() {
     currentItems.push({
         id: Date.now().toString(),
-        productCode: '',
+        itemType: 'Merce',
         description: '',
         unit: 'corpo',
         quantity: 1,
@@ -199,18 +199,25 @@ function renderSalesItems() {
 
     currentItems.forEach((item, index) => {
         const tr = document.createElement('tr');
-        // In lump_sum mode price fields are readonly / hidden
-        const priceInput = isLumpSum
-            ? `<input type="number" step="0.01" class="w-full border p-1 text-sm rounded text-right bg-slate-100 text-slate-400 cursor-not-allowed" value="${item.unitPrice}" readonly tabindex="-1">`
+        const isNote = item.itemType === 'Note';
+        const disablePrice = isLumpSum || isNote;
+
+        const priceInput = disablePrice
+            ? `<input type="number" step="0.01" class="w-full border p-1 text-sm rounded text-right bg-slate-100 text-slate-400 cursor-not-allowed" value="${isNote ? 0 : item.unitPrice}" readonly tabindex="-1">`
             : `<input type="number" step="0.01" onchange="salesUpdateItem(${index}, 'unitPrice', parseFloat(this.value))" class="w-full border p-1 text-sm rounded text-right" value="${item.unitPrice}">`;
-        const totalCell = isLumpSum
+        const totalCell = disablePrice
             ? `<span class="text-slate-300 text-xs italic">—</span>`
             : formatCurrency(item.quantity * item.unitPrice);
 
+        const merceSelected = item.itemType !== 'Note' ? 'selected' : '';
+        const noteSelected = item.itemType === 'Note' ? 'selected' : '';
+
         tr.innerHTML = `
             <td class="px-2 py-2">
-                <input type="text" list="products-list" onchange="salesProductChanged(${index}, this.value)" 
-                    class="w-full border p-1 text-sm rounded" value="${item.productCode || ''}" placeholder="Cod.">
+                <select onchange="salesUpdateItemType(${index}, this.value)" class="w-full border p-1 text-sm rounded">
+                    <option value="Merce" ${merceSelected}>Merce</option>
+                    <option value="Note" ${noteSelected}>Note</option>
+                </select>
             </td>
             <td class="px-2 py-2">
                 <input type="text" onchange="salesUpdateItem(${index}, 'description', this.value)" 
@@ -235,31 +242,17 @@ function renderSalesItems() {
         tbody.appendChild(tr);
     });
 
-    // Datalist for product codes
-    let dl = document.getElementById('products-list');
-    if (dl) dl.remove();
-    dl = document.createElement('datalist');
-    dl.id = 'products-list';
-    salesProducts.forEach(p => {
-        const op = document.createElement('option');
-        op.value = p.code;
-        dl.appendChild(op);
-    });
-    document.body.appendChild(dl);
-
     lucide.createIcons();
     salesCalcTotals();
 }
 
-function salesProductChanged(index, code) {
-    const product = salesProducts.find(p => p.code === code);
-    if (product) {
-        currentItems[index].productCode = product.code;
-        currentItems[index].description = product.description;
-        currentItems[index].unit = product.unit;
-        currentItems[index].unitPrice = product.price;
-        renderSalesItems();
+function salesUpdateItemType(index, type) {
+    currentItems[index].itemType = type;
+    if (type === 'Note') {
+        currentItems[index].unitPrice = 0;
+        currentItems[index].total = 0;
     }
+    renderSalesItems();
 }
 
 function salesUpdateItem(index, field, value) {
@@ -283,7 +276,7 @@ function salesCalcTotals() {
         grossTotal = parseFloat(document.getElementById('sales-lump-sum-amount').value) || 0;
     } else {
         // In modalità dettagliata somma i righi articoli
-        grossTotal = currentItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+        grossTotal = currentItems.filter(item => item.itemType !== 'Note').reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
     }
     const discount = parseFloat(document.getElementById('sales-discount').value) || 0;
     const subtotal = Math.max(0, grossTotal - discount);
@@ -388,6 +381,7 @@ function salesLoadOffer(offer) {
 
     currentItems = offer.items.map(i => ({
         ...i,
+        itemType: i.item_type || 'Merce',
         quantity: i.quantity,
         unitPrice: i.unit_price
     }));
@@ -557,13 +551,17 @@ function salesGeneratePDF() {
         };
     } else {
         // Modalità dettagliata: descrizione, qta, u.m., prezzo unitario, totale riga
-        tableRows = currentItems.map(item => [
-            item.description || '',
-            item.unit || '',
-            item.quantity != null ? item.quantity.toString() : '',
-            EUR(item.unitPrice || 0),
-            EUR((item.quantity || 0) * (item.unitPrice || 0))
-        ]);
+        // Per righe "Note" il prezzo e totale non vengono mostrati
+        tableRows = currentItems.map(item => {
+            const isNote = item.itemType === 'Note';
+            return [
+                item.description || '',
+                item.unit || '',
+                item.quantity != null ? item.quantity.toString() : '',
+                isNote ? '' : EUR(item.unitPrice || 0),
+                isNote ? '' : EUR((item.quantity || 0) * (item.unitPrice || 0))
+            ];
+        });
         tableHead = [['Descrizione', 'U.M.', 'Qta', 'Prezzo Unit.', 'Totale']];
         tableColumnStyles = {
             0: { cellWidth: 'auto' },

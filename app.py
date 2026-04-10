@@ -216,9 +216,9 @@ def save_product():
     if not data.get('id'):
         data['id'] = generate_id()
     db.execute('''
-        INSERT OR REPLACE INTO products (id, code, description, unit, price)
+        INSERT OR REPLACE INTO products (id, item_type, description, unit, price)
         VALUES (?, ?, ?, ?, ?)
-    ''', (data['id'], data['code'], data['description'], data['unit'], data['price']))
+    ''', (data['id'], data.get('item_type', 'Merce'), data['description'], data['unit'], data['price']))
     db.commit()
     return jsonify({'status': 'success', 'id': data['id']})
 
@@ -278,9 +278,9 @@ def save_offer():
         if not item.get('id'):
             item['id'] = generate_id()
         db.execute('''
-            INSERT INTO offer_items (id, offer_id, product_id, product_code, description, unit, quantity, unit_price, total)
+            INSERT INTO offer_items (id, offer_id, product_id, item_type, description, unit, quantity, unit_price, total)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (item['id'], data['id'], item.get('productId'), item.get('productCode'), item.get('description'),
+        ''', (item['id'], data['id'], item.get('productId'), item.get('itemType', 'Merce'), item.get('description'),
               item.get('unit'), item.get('quantity'), item.get('unitPrice'), item.get('total')))
     
     db.commit()
@@ -617,6 +617,31 @@ def change_password():
     return jsonify({'status': 'success'})
 
 
+def migrate_db():
+    """Migra il database esistente: code -> item_type"""
+    with app.app_context():
+        db = get_db()
+        try:
+            # Controlla se la colonna 'code' esiste ancora in products
+            cols = [row[1] for row in db.execute('PRAGMA table_info(products)').fetchall()]
+            if 'code' in cols and 'item_type' not in cols:
+                print("Migrating products: code -> item_type...")
+                db.execute("ALTER TABLE products ADD COLUMN item_type TEXT NOT NULL DEFAULT 'Merce'")
+                db.execute("UPDATE products SET item_type = 'Merce'")
+                db.commit()
+        except Exception as e:
+            print(f"Migration products warning: {e}")
+        try:
+            cols = [row[1] for row in db.execute('PRAGMA table_info(offer_items)').fetchall()]
+            if 'product_code' in cols and 'item_type' not in cols:
+                print("Migrating offer_items: product_code -> item_type...")
+                db.execute("ALTER TABLE offer_items ADD COLUMN item_type TEXT DEFAULT 'Merce'")
+                db.execute("UPDATE offer_items SET item_type = 'Merce'")
+                db.commit()
+        except Exception as e:
+            print(f"Migration offer_items warning: {e}")
+
+
 if __name__ == '__main__':
     with app.app_context():
         db = get_db()
@@ -625,4 +650,5 @@ if __name__ == '__main__':
         except sqlite3.OperationalError:
             print("Initializing Database...")
             init_db()
+    migrate_db()
     app.run(debug=True, host='0.0.0.0', port=5000)

@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS clients (
 -- Tabella Prodotti (Inventory)
 CREATE TABLE IF NOT EXISTS products (
     id TEXT PRIMARY KEY,
-    code TEXT NOT NULL,
+    item_type TEXT NOT NULL DEFAULT 'Merce',
     description TEXT NOT NULL,
     unit TEXT NOT NULL,
     price REAL NOT NULL,
@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS offer_items (
     id TEXT PRIMARY KEY,
     offer_id TEXT NOT NULL,
     product_id TEXT,
-    product_code TEXT,
+    item_type TEXT DEFAULT 'Merce',
     description TEXT,
     unit TEXT,
     quantity REAL,
