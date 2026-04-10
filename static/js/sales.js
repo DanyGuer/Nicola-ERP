@@ -5,7 +5,6 @@ let salesProducts = [];
 let currentItems = [];
 let loadedLogo = null; // base64 logo from upload
 let defaultLogo = null; // base64 logo loaded from server
-let currentOfferNumber = null; // Progressive offer number from backend
 
 // ---- LOAD DEFAULT LOGO ON INIT ----
 async function preloadDefaultLogo() {
@@ -86,7 +85,7 @@ function renderSalesList(offers) {
             <div class="flex justify-between items-start mb-4">
                 <div>
                     <h3 class="font-bold text-lg text-slate-800">${offer.client_name}</h3>
-                    <p class="text-sm text-slate-500">Offerta N. ${offer.offer_number || '-'} del ${new Date(offer.date).toLocaleDateString('it-IT')}</p>
+                    <p class="text-sm text-slate-500">Offerta del ${new Date(offer.date).toLocaleDateString('it-IT')}</p>
                 </div>
                 <span class="px-3 py-1 rounded-full text-xs font-bold ${statusColors[offer.status] || 'bg-slate-100'}">
                     ${offer.status}
@@ -131,7 +130,6 @@ function salesOpenModal() {
     document.querySelector('#sales-form [name="id"]').value = '';
     currentItems = [];
     loadedLogo = null;
-    currentOfferNumber = null;
 
     document.querySelector('#sales-form [name="date"]').valueAsDate = new Date();
     document.getElementById('sales-discount').value = 0;
@@ -387,7 +385,6 @@ function salesLoadOffer(offer) {
     }));
 
     loadedLogo = offer.custom_logo_url;
-    currentOfferNumber = offer.offer_number;
     renderSalesItems();
     salesCalcTotals();
 }
@@ -429,7 +426,6 @@ function salesGeneratePDF() {
     const totals = salesCalcTotals();
 
     const dateStr = new Date(form.querySelector('[name="date"]').value).toLocaleDateString('it-IT');
-    const offerNo = currentOfferNumber || 'NUOVO';
 
     const pageW = 210;
     const marginL = 15;
@@ -453,11 +449,11 @@ function salesGeneratePDF() {
         try { doc.addImage(logoData, 'PNG', marginL, 8, 35, 28); } catch (e) { console.warn('Logo err', e); }
     }
 
-    // ---- OFFER NUMBER (top-right) ----
+    // ---- TITLE (top-right) ----
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.setTextColor(...DARK_BLUE);
-    doc.text(`Offerta N. ${offerNo}`, marginR, 18, { align: 'right' });
+    doc.text('OFFERTA', marginR, 18, { align: 'right' });
 
     doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
@@ -583,25 +579,25 @@ function salesGeneratePDF() {
             fontStyle: 'bold',
             lineColor: BLACK,
             lineWidth: 0.2,
-            fontSize: 10
+            fontSize: 9
         },
         bodyStyles: {
             textColor: BLACK,
             lineColor: BLACK,
             lineWidth: 0.1,
-            fontSize: 9,
-            cellPadding: 2.5
+            fontSize: 8,
+            cellPadding: 2
         },
         columnStyles: tableColumnStyles,
         margin: { left: marginL, right: marginL }
     });
 
-    let tableEndY = doc.lastAutoTable.finalY + 5;
+    let tableEndY = doc.lastAutoTable.finalY + 3;
 
     // ---- TOTALS BOX (right-aligned) ----
     const boxX = 110;
     const boxW = 85;
-    const rowH = 6;
+    const rowH = 5.5;
     let bY = tableEndY;
 
     // Helper: controlla se serve nuova pagina
@@ -653,12 +649,11 @@ function salesGeneratePDF() {
     doc.setTextColor(...BLACK);
     doc.text("TOTALE LAVORAZIONE:", boxX + 2, bY + 5);
     doc.text(EUR(totals.total), boxX + boxW - 2, bY + 5, { align: 'right' });
-    bY += rowH + 5;
+    bY += rowH + 3;
 
-    // ---- PAYMENT BREAKDOWN BOX ----
     const payTerms = form.querySelector('[name="paymentTerms"]').value || '';
-    const payBoxH = 28;
-    checkPageBreak(payBoxH + 5);
+    const payBoxH = 26;
+    checkPageBreak(payBoxH + 3);
 
     doc.setDrawColor(0, 0, 0);
     doc.setLineWidth(0.2);
@@ -713,7 +708,7 @@ function salesGeneratePDF() {
         });
     }
 
-    bY += payBoxH + 5;
+    bY += payBoxH + 3;
 
     // Company footer info (pagina 1)
     drawPageFooter(doc, marginL, marginR, pageW, DARK_BLUE, GRAY);
@@ -728,11 +723,6 @@ function salesGeneratePDF() {
     doc.setFontSize(16);
     doc.setTextColor(...DARK_BLUE);
     doc.text("CONDIZIONI GENERALI DI CONTRATTO", pageW / 2, 20, { align: 'center' });
-
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(...GRAY);
-    doc.text(`Rif. Offerta N. ${offerNo}`, pageW / 2, 26, { align: 'center' });
 
     // Separator
     doc.setDrawColor(...DARK_BLUE);

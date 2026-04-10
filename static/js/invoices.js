@@ -58,7 +58,7 @@ function invOpenInvoiceModal() {
 
     const oSel = document.getElementById('inv-invoice-offer');
     oSel.innerHTML = '<option value="">-- Nessuna --</option>';
-    invOffers.filter(o => o.status === 'Accettata').forEach(o => { oSel.innerHTML += `<option value="${o.id}">${o.offer_number} - ${o.client_name} (${formatCurrency(o.total)})</option>`; });
+    invOffers.filter(o => o.status === 'Accettata').forEach(o => { oSel.innerHTML += `<option value="${o.id}">${o.client_name} - ${new Date(o.date).toLocaleDateString('it-IT')} (${formatCurrency(o.total)})</option>`; });
 
     renderInvoiceItems();
     document.getElementById('invoice-modal').classList.remove('hidden');
