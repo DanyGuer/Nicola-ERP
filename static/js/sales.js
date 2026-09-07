@@ -133,6 +133,7 @@ function salesOpenModal() {
 
     document.querySelector('#sales-form [name="date"]').valueAsDate = new Date();
     document.getElementById('sales-discount').value = 0;
+    document.getElementById('sales-vat-rate').value = 22;
 
     // Reset pricing mode to itemized
     const itemizedRadio = document.querySelector('#sales-form [name="pricingMode"][value="itemized"]');
