@@ -363,6 +363,7 @@ function salesLoadOffer(offer) {
     if (form.querySelector('[name="notes"]')) form.querySelector('[name="notes"]').value = offer.notes || '';
 
     document.getElementById('sales-discount').value = offer.discount || 0;
+    document.getElementById('sales-vat-rate').value = offer.vat_rate != null ? offer.vat_rate : 22;
 
     // FIX: Ripristinare la modalità pricing salvata
     const pricingMode = offer.pricing_mode || 'itemized';
