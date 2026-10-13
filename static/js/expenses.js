@@ -16,9 +16,9 @@ async function loadExpenses() {
 
 function renderExpenses(expenses) {
     // Summary cards
-    const total = expenses.reduce((s, e) => s + e.amount, 0);
+    const total = expenses.reduce((s, e) => s + Number(e.amount || 0), 0);
     const categories = {};
-    expenses.forEach(e => { categories[e.category] = (categories[e.category] || 0) + e.amount; });
+    expenses.forEach(e => { categories[e.category] = (categories[e.category] || 0) + Number(e.amount || 0); });
     const topCat = Object.entries(categories).sort((a, b) => b[1] - a[1])[0];
 
     document.getElementById('exp-summary').innerHTML = `
@@ -43,7 +43,7 @@ function renderExpenses(expenses) {
     expenses.forEach(e => {
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50 cursor-pointer';
-        tr.onclick = (ev) => { if (ev.target.tagName !== 'BUTTON') expEdit(e); };
+        tr.onclick = (ev) => { if (!ev.target.closest('button')) expEdit(e); };
         const catColors = { 'Materiali': 'bg-blue-100 text-blue-700', 'Trasporto': 'bg-amber-100 text-amber-700', 'Manodopera': 'bg-green-100 text-green-700', 'Utenze': 'bg-purple-100 text-purple-700', 'Attrezzatura': 'bg-cyan-100 text-cyan-700', 'Altro': 'bg-slate-100 text-slate-700' };
         tr.innerHTML = `
             <td class="px-6 py-4 text-sm">${new Date(e.date).toLocaleDateString('it-IT')}</td>
@@ -95,6 +95,7 @@ async function expSave(ev) {
     const fd = Object.fromEntries(new FormData(form));
     const suppSel = document.getElementById('exp-supplier-select');
     const projSel = document.getElementById('exp-project-select');
+    fd.amount = parseFloat(fd.amount) || 0;
     fd.supplierId = fd.supplierId || null;
     fd.supplierName = suppSel.selectedOptions[0]?.dataset?.name || null;
     fd.projectId = fd.projectId || null;

@@ -16,7 +16,8 @@ function renderInvTable(products) {
 
     products.forEach(p => {
         const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-50 transition-colors';
+        tr.className = 'hover:bg-slate-50 transition-colors cursor-pointer';
+        tr.onclick = (e) => { if (!e.target.closest('button')) invEdit(p); };
         const badgeColor = p.item_type === 'Note'
             ? 'bg-slate-100 text-slate-600'
             : 'bg-blue-100 text-blue-700';
@@ -41,6 +42,16 @@ function invOpenModal() {
 
 function invCloseModal() {
     document.getElementById('inv-modal').classList.add('hidden');
+}
+
+function invEdit(p) {
+    invOpenModal();
+    const form = document.getElementById('inv-form');
+    form.querySelector('[name="id"]').value = p.id;
+    if (form.querySelector('[name="item_type"]')) form.querySelector('[name="item_type"]').value = p.item_type || 'Merce';
+    form.querySelector('[name="description"]').value = p.description || '';
+    form.querySelector('[name="unit"]').value = p.unit || '';
+    form.querySelector('[name="price"]').value = p.price || 0;
 }
 
 async function invSave(e) {

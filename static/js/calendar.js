@@ -1,15 +1,26 @@
 // Calendar Module
 let calClients = [];
 let calProjects = [];
+let calEvents = [];
 
 async function loadCalendar() {
     try {
         const [evRes, cRes, pRes] = await Promise.all([fetch('/api/events'), fetch('/api/clients'), fetch('/api/projects')]);
-        const events = await evRes.json();
+        calEvents = await evRes.json();
         calClients = await cRes.json();
         calProjects = await pRes.json();
-        renderCalendar(events);
+        renderCalendar(calEvents);
     } catch (e) { console.error(e); }
+}
+
+function calEditById(id) {
+    const ev = calEvents.find(e => e.id === id);
+    if (ev) calEdit(ev);
+}
+
+function calAddToCalendarById(id) {
+    const ev = calEvents.find(e => e.id === id);
+    if (ev) calAddToCalendar(ev.title, ev.date, ev.time, ev.description);
 }
 
 function renderCalendar(events) {
@@ -33,16 +44,15 @@ function renderCalendar(events) {
         container.innerHTML += `<div class="text-sm font-bold ${isToday ? 'text-indigo-600' : isPast ? 'text-slate-400' : 'text-slate-700'} mt-4 mb-2">${isToday ? '📍 OGGI - ' : ''}${new Date(date).toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div>`;
 
         grouped[date].forEach(ev => {
-            const evJSON = JSON.stringify(ev).replace(/"/g, '&quot;');
             container.innerHTML += `
-                <div class="flex items-center gap-3 p-4 bg-white rounded-xl border ${typeColors[ev.type] || 'border-slate-200'} ${ev.completed ? 'opacity-50' : ''} cursor-pointer hover:shadow-sm transition-shadow" onclick="calEdit(${evJSON})">
+                <div class="flex items-center gap-3 p-4 bg-white rounded-xl border ${typeColors[ev.type] || 'border-slate-200'} ${ev.completed ? 'opacity-50' : ''} cursor-pointer hover:shadow-sm transition-shadow" onclick="calEditById('${ev.id}')">
                     <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${typeColors[ev.type] || 'bg-slate-100'}"><i data-lucide="${typeIcons[ev.type] || 'star'}" class="w-5 h-5"></i></div>
                     <div class="flex-1 min-w-0">
                         <div class="font-medium ${ev.completed ? 'line-through' : ''} truncate">${ev.title}</div>
                         <div class="text-xs text-slate-400 truncate">${ev.time || ''} ${ev.client_name ? '· ' + ev.client_name : ''} ${ev.project_name ? '· 🏗️ ' + ev.project_name : ''}</div>
                     </div>
                     <div class="flex items-center gap-1 shrink-0">
-                        <button onclick="event.stopPropagation();calAddToCalendar('${ev.title}','${ev.date}','${ev.time || ''}','${(ev.description || '').replace(/'/g, "\\'")}')" class="text-xs text-indigo-500 hover:text-indigo-700 p-1" title="Aggiungi al Calendario">📅</button>
+                        <button onclick="event.stopPropagation();calAddToCalendarById('${ev.id}')" class="text-xs text-indigo-500 hover:text-indigo-700 p-1" title="Aggiungi al Calendario">📅</button>
                         <button onclick="event.stopPropagation();calToggle('${ev.id}')" class="text-xs ${ev.completed ? 'text-green-600' : 'text-slate-400'} hover:text-green-700 p-1">${ev.completed ? '✓' : '○'}</button>
                         <button onclick="event.stopPropagation();calDelete('${ev.id}')" class="text-xs text-red-400 hover:text-red-600 p-1">✕</button>
                     </div>

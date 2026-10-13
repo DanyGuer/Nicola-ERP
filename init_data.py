@@ -1,7 +1,9 @@
 import sqlite3
 import uuid
+import os
 
-DATABASE = 'erp.sqlite'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE = os.environ.get('DATABASE_PATH', os.path.join(BASE_DIR, 'erp.sqlite'))
 
 def generate_id():
     return str(uuid.uuid4())
@@ -11,7 +13,8 @@ def init_data():
     c = conn.cursor()
     
     # Create tables if not exist
-    with open('schema.sql', 'r') as f:
+    schema_path = os.path.join(BASE_DIR, 'schema.sql')
+    with open(schema_path, 'r', encoding='utf-8') as f:
         c.executescript(f.read())
         
     # Check if data exists
@@ -40,9 +43,17 @@ def init_data():
             ('PONT', 'Nolo e montaggio Trabattello in acciaio con scale', 'corpo', 250.00),
         ]
         
+        cols = [row[1] for row in c.execute('PRAGMA table_info(products)').fetchall()]
         for p in products:
-            c.execute('INSERT INTO products (id, code, description, unit, price) VALUES (?, ?, ?, ?, ?)',
-                      (generate_id(), p[0], p[1], p[2], p[3]))
+            if 'code' in cols and 'item_type' in cols:
+                c.execute('INSERT INTO products (id, code, item_type, description, unit, price) VALUES (?, ?, ?, ?, ?, ?)',
+                          (generate_id(), p[0], 'Merce', p[1], p[2], p[3]))
+            elif 'item_type' in cols:
+                c.execute('INSERT INTO products (id, item_type, description, unit, price) VALUES (?, ?, ?, ?, ?)',
+                          (generate_id(), 'Merce', p[1], p[2], p[3]))
+            else:
+                c.execute('INSERT INTO products (id, code, description, unit, price) VALUES (?, ?, ?, ?, ?)',
+                          (generate_id(), p[0], p[1], p[2], p[3]))
 
     # Crea l'utente admin se non esiste (viene eseguito SEMPRE all'avvio)
     # Crea utente Nicola se non esiste

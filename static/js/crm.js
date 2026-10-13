@@ -17,6 +17,7 @@ function renderCRMTable(clients) {
     clients.forEach(client => {
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50 transition-colors cursor-pointer';
+        tr.onclick = (e) => { if (!e.target.closest('button')) crmEdit(client); };
         tr.innerHTML = `
             <td class="px-6 py-4">
                 <div class="font-medium text-slate-900">${client.name}</div>
@@ -48,6 +49,20 @@ function crmOpenModal() {
 
 function crmCloseModal() {
     document.getElementById('crm-modal').classList.add('hidden');
+}
+
+function crmEdit(client) {
+    crmOpenModal();
+    const form = document.getElementById('crm-form');
+    form.querySelector('[name="id"]').value = client.id;
+    form.querySelector('[name="type"]').value = client.type;
+    form.querySelector('[name="name"]').value = client.name;
+    form.querySelector('[name="cf"]').value = client.cf || '';
+    form.querySelector('[name="vat"]').value = client.vat || '';
+    form.querySelector('[name="address"]').value = client.address || '';
+    form.querySelector('[name="email"]').value = client.email || '';
+    form.querySelector('[name="phone"]').value = client.phone || '';
+    crmToggleFields();
 }
 
 function crmToggleFields() {

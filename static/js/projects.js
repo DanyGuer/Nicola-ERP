@@ -25,7 +25,7 @@ function renderProjects(projects) {
 
         const div = document.createElement('div');
         div.className = 'bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:border-indigo-300 transition-colors cursor-pointer';
-        div.onclick = (e) => { if (e.target.tagName !== 'BUTTON') projEdit(p); };
+        div.onclick = (e) => { if (!e.target.closest('button')) projEdit(p); };
         div.innerHTML = `
             <div class="flex justify-between items-start mb-4">
                 <div><h3 class="font-bold text-lg">${p.name}</h3><p class="text-sm text-slate-500">${p.client_name || '-'} · ${p.address || '-'}</p></div>
@@ -80,6 +80,7 @@ async function projSave(e) {
     const form = document.getElementById('proj-form');
     const fd = Object.fromEntries(new FormData(form));
     const cSel = document.getElementById('proj-client-select');
+    fd.budget = parseFloat(fd.budget) || 0;
     fd.clientId = fd.clientId || null;
     fd.clientName = cSel.selectedOptions[0]?.dataset?.name || null;
     try {

@@ -675,9 +675,22 @@
                     <div><label class="block text-xs font-medium text-slate-500 mb-1">Imponibile</label><input
                             type="number" step="0.01" name="subtotal" readonly
                             class="w-full border rounded-lg p-2 text-sm bg-white"></div>
-                    <div><label class="block text-xs font-medium text-slate-500 mb-1">IVA %</label><input type="number"
-                            name="vatRate" value="22" class="w-full border rounded-lg p-2 text-sm"
-                            onchange="invCalcInvoice()"></div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">IVA %</label>
+                        <div class="flex gap-1 items-center">
+                            <select id="inv-vat-select" onchange="invVatSelectChanged()"
+                                class="border rounded-lg p-2 text-xs bg-white text-slate-700 flex-1">
+                                <option value="22">22%</option>
+                                <option value="10">10%</option>
+                                <option value="4">4%</option>
+                                <option value="0">0%</option>
+                                <option value="custom">Altra</option>
+                            </select>
+                            <input type="number" step="0.1" min="0" max="100" name="vatRate" id="inv-vat-rate" value="22"
+                                class="w-16 border rounded-lg p-2 text-sm text-center font-semibold"
+                                oninput="invVatInputChanged()" onchange="invVatInputChanged()">
+                        </div>
+                    </div>
                     <div><label class="block text-xs font-medium text-slate-500 mb-1">Totale</label><input type="number"
                             step="0.01" name="total" readonly
                             class="w-full border rounded-lg p-2 text-sm bg-white font-bold"></div>
@@ -811,10 +824,19 @@
                                 <td></td>
                             </tr>
                             <tr>
-                                <td colspan="5" class="px-4 py-2 text-right text-slate-500 font-normal">IVA
-                                    <input type="number" id="sales-vat-rate" name="vatRate"
-                                        class="w-12 text-center border rounded mx-1 text-sm"
-                                        onchange="salesCalcTotals()">%
+                                <td colspan="5" class="px-4 py-2 text-right text-slate-500 font-normal">
+                                    <span class="mr-2">Aliquota IVA:</span>
+                                    <select id="sales-vat-select" onchange="salesVatSelectChanged()"
+                                        class="border rounded px-2 py-1 text-sm bg-white font-medium mr-1 text-slate-700">
+                                        <option value="22">22% (Ordinaria)</option>
+                                        <option value="10">10% (Agevolata - Ristrutturazione)</option>
+                                        <option value="4">4% (Agevolata - Prima Casa)</option>
+                                        <option value="0">0% (Esente / Forfettario)</option>
+                                        <option value="custom">Personalizzata...</option>
+                                    </select>
+                                    <input type="number" id="sales-vat-rate" name="vatRate" min="0" max="100" step="0.1" value="22"
+                                        class="w-16 text-center border rounded px-1 py-1 text-sm font-semibold"
+                                        oninput="salesVatInputChanged()" onchange="salesVatInputChanged()">%
                                 </td>
                                 <td class="px-4 py-2 text-right text-slate-500 font-normal" id="sales-vat-amount">€ 0,00
                                 </td>

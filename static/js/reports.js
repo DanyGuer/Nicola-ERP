@@ -79,17 +79,19 @@ function renderReports(data) {
             <!-- Fatturato Mensile -->
             <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                 <h3 class="font-semibold mb-4">📈 Fatturato Mensile (Incassato)</h3>
-                ${data.monthly_revenue.length ? `
-                <div class="space-y-2">
-                    ${data.monthly_revenue.reverse().map(m => {
-        const maxRev = Math.max(...data.monthly_revenue.map(r => r.revenue));
-        const perc = maxRev > 0 ? (m.revenue / maxRev * 100).toFixed(0) : 0;
-        return `<div class="flex items-center gap-3">
-                            <span class="text-xs text-slate-500 w-16">${m.month}</span>
-                            <div class="flex-1 bg-slate-100 rounded-full h-4"><div class="bg-green-500 h-4 rounded-full flex items-center justify-end pr-2" style="width:${Math.max(perc, 8)}%"><span class="text-xs text-white font-medium">${formatCurrency(m.revenue)}</span></div></div>
-                        </div>`;
-    }).join('')}
-                </div>` : '<p class="text-slate-400 text-sm">Nessun dato disponibile</p>'}
+                ${data.monthly_revenue.length ? (() => {
+                    const revList = [...data.monthly_revenue].reverse();
+                    const maxRev = Math.max(...revList.map(r => r.revenue));
+                    return `<div class="space-y-2">
+                        ${revList.map(m => {
+                            const perc = maxRev > 0 ? (m.revenue / maxRev * 100).toFixed(0) : 0;
+                            return `<div class="flex items-center gap-3">
+                                <span class="text-xs text-slate-500 w-16">${m.month}</span>
+                                <div class="flex-1 bg-slate-100 rounded-full h-4"><div class="bg-green-500 h-4 rounded-full flex items-center justify-end pr-2" style="width:${Math.max(perc, 8)}%"><span class="text-xs text-white font-medium">${formatCurrency(m.revenue)}</span></div></div>
+                            </div>`;
+                        }).join('')}
+                    </div>`;
+                })() : '<p class="text-slate-400 text-sm">Nessun dato disponibile</p>'}
             </div>
             
             <!-- Top Clienti -->

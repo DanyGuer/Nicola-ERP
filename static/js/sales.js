@@ -71,7 +71,7 @@ function renderSalesList(offers) {
         const div = document.createElement('div');
         div.className = 'bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:border-indigo-300 transition-colors cursor-pointer';
         div.onclick = (e) => {
-            if (e.target.tagName !== 'BUTTON') salesLoadOffer(offer);
+            if (!e.target.closest('button')) salesLoadOffer(offer);
         };
 
         const statusColors = {
@@ -125,6 +125,41 @@ function salesTogglePricingMode() {
     salesCalcTotals();
 }
 
+function salesVatSelectChanged() {
+    const sel = document.getElementById('sales-vat-select');
+    const input = document.getElementById('sales-vat-rate');
+    if (!sel || !input) return;
+    if (sel.value !== 'custom') {
+        input.value = sel.value;
+    } else {
+        input.focus();
+        input.select();
+    }
+    salesCalcTotals();
+}
+
+function salesVatInputChanged() {
+    const sel = document.getElementById('sales-vat-select');
+    const input = document.getElementById('sales-vat-rate');
+    if (!sel || !input) return;
+    const val = input.value.trim();
+    if (['22', '10', '4', '0'].includes(val)) {
+        sel.value = val;
+    } else {
+        sel.value = 'custom';
+    }
+    salesCalcTotals();
+}
+
+function salesGetVatRate() {
+    const input = document.getElementById('sales-vat-rate');
+    if (!input) return 22;
+    const val = input.value.trim();
+    if (val === '') return 22;
+    const num = parseFloat(val);
+    return isNaN(num) ? 22 : num;
+}
+
 function salesOpenModal() {
     document.getElementById('sales-form').reset();
     document.querySelector('#sales-form [name="id"]').value = '';
@@ -133,7 +168,10 @@ function salesOpenModal() {
 
     document.querySelector('#sales-form [name="date"]').valueAsDate = new Date();
     document.getElementById('sales-discount').value = 0;
-    document.getElementById('sales-vat-rate').value = 22;
+    const vatInput = document.getElementById('sales-vat-rate');
+    if (vatInput) vatInput.value = 22;
+    const vatSel = document.getElementById('sales-vat-select');
+    if (vatSel) vatSel.value = '22';
 
     // Reset pricing mode to itemized
     const itemizedRadio = document.querySelector('#sales-form [name="pricingMode"][value="itemized"]');
@@ -279,7 +317,7 @@ function salesCalcTotals() {
     }
     const discount = parseFloat(document.getElementById('sales-discount').value) || 0;
     const subtotal = Math.max(0, grossTotal - discount);
-    const vatRate = parseFloat(document.getElementById('sales-vat-rate').value) || 22;
+    const vatRate = salesGetVatRate();
     const vatAmount = subtotal * (vatRate / 100);
     const total = subtotal + vatAmount;
 
@@ -364,7 +402,18 @@ function salesLoadOffer(offer) {
     if (form.querySelector('[name="notes"]')) form.querySelector('[name="notes"]').value = offer.notes || '';
 
     document.getElementById('sales-discount').value = offer.discount || 0;
-    document.getElementById('sales-vat-rate').value = offer.vat_rate != null ? offer.vat_rate : 22;
+    const savedVatRate = (offer.vat_rate !== null && offer.vat_rate !== undefined) ? offer.vat_rate : 22;
+    const vatInput = document.getElementById('sales-vat-rate');
+    if (vatInput) vatInput.value = savedVatRate;
+    const vatSel = document.getElementById('sales-vat-select');
+    if (vatSel) {
+        const strVal = String(savedVatRate);
+        if (['22', '10', '4', '0'].includes(strVal)) {
+            vatSel.value = strVal;
+        } else {
+            vatSel.value = 'custom';
+        }
+    }
 
     // FIX: Ripristinare la modalità pricing salvata
     const pricingMode = offer.pricing_mode || 'itemized';
@@ -639,7 +688,8 @@ function salesGeneratePDF() {
     }
 
     drawTotalRow("Imponibile Netto:", EUR(totals.subtotal), true, false, true);
-    drawTotalRow(`IVA (${totals.vatRate}%):`, EUR(totals.vatAmount), false, false, false);
+    const vatLabel = totals.vatRate === 0 ? "IVA (0% - Esente):" : `IVA (${totals.vatRate}%):`;
+    drawTotalRow(vatLabel, EUR(totals.vatAmount), false, false, false);
 
     // TOTALE LAVORAZIONE (bigger row)
     checkPageBreak(rowH + 5);

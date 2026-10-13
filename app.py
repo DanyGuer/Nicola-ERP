@@ -8,7 +8,8 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'nicola-erp-secret-key-2024-cambiamiinproduzione')
-DATABASE = 'erp.sqlite'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE = os.environ.get('DATABASE_PATH', os.path.join(BASE_DIR, 'erp.sqlite'))
 
 
 # ============================================
@@ -32,7 +33,8 @@ def close_connection(exception):
 def init_db():
     with app.app_context():
         db = get_db()
-        with open('schema.sql', mode='r') as f:
+        schema_path = os.path.join(BASE_DIR, 'schema.sql')
+        with open(schema_path, mode='r', encoding='utf-8') as f:
             db.cursor().executescript(f.read())
         db.commit()
 
@@ -47,11 +49,13 @@ def generate_offer_number():
         (f"{year}/%",)
     )
     row = cursor.fetchone()
-    if row:
-        last_num = int(row['offer_number'].split('/')[1])
-        next_num = last_num + 1
-    else:
-        next_num = 1
+    next_num = 1
+    if row and row['offer_number']:
+        try:
+            last_num = int(row['offer_number'].split('/')[1])
+            next_num = last_num + 1
+        except (IndexError, ValueError):
+            next_num = 1
     return f"{year}/{str(next_num).zfill(5)}"
 
 def generate_invoice_number():
@@ -62,11 +66,13 @@ def generate_invoice_number():
         (f"FT-{year}/%",)
     )
     row = cursor.fetchone()
-    if row:
-        last_num = int(row['invoice_number'].split('/')[1])
-        next_num = last_num + 1
-    else:
-        next_num = 1
+    next_num = 1
+    if row and row['invoice_number']:
+        try:
+            last_num = int(row['invoice_number'].split('/')[1])
+            next_num = last_num + 1
+        except (IndexError, ValueError):
+            next_num = 1
     return f"FT-{year}/{str(next_num).zfill(5)}"
 
 
@@ -258,6 +264,45 @@ def save_offer():
         existing = db.execute('SELECT offer_number FROM offers WHERE id = ?', (data['id'],)).fetchone()
         offer_number = existing['offer_number'] if existing else generate_offer_number()
     
+    vat_rate = float(data['vatRate']) if data.get('vatRate') is not None and str(data['vatRate']).strip() != '' else 22.0
+    discount = float(data.get('discount', 0) or 0)
+    lump_sum = float(data['lumpSumAmount']) if data.get('lumpSumAmount') is not None and str(data['lumpSumAmount']).strip() != '' else None
+
+    # Resolve client details if missing
+    client_name = data.get('clientName')
+    client_address = data.get('clientAddress')
+    client_vat_cf = data.get('clientVatOrCf') or data.get('clientVatCf')
+    if not client_name and data.get('clientId'):
+        client_row = db.execute('SELECT * FROM clients WHERE id = ?', (data['clientId'],)).fetchone()
+        if client_row:
+            client_name = client_row['name']
+            client_address = client_address or client_row['address']
+            client_vat_cf = client_vat_cf or (client_row['vat'] or client_row['cf'])
+    client_name = client_name or 'Cliente'
+
+    # Calculate item totals if missing
+    items = data.get('items', [])
+    items_gross = sum(
+        (float(item.get('quantity', 0) or 0) * (float(item.get('unitPrice', 0) or 0) + float(item.get('laborCost', 0) or 0)))
+        * (1 - (float(item.get('discount', 0) or 0) / 100))
+        for item in items
+    )
+    pricing_mode = data.get('pricingMode', 'itemized')
+    if pricing_mode == 'lump_sum' and lump_sum is not None:
+        subtotal = lump_sum
+    else:
+        subtotal = float(data.get('subtotal', 0) or 0)
+        if subtotal == 0 and items_gross > 0:
+            subtotal = max(0.0, items_gross - discount)
+    
+    vat_amount = float(data.get('vatAmount', 0) or 0)
+    if vat_amount == 0 and subtotal > 0 and vat_rate > 0:
+        vat_amount = round(subtotal * (vat_rate / 100), 2)
+    
+    total = float(data.get('total', 0) or 0)
+    if total == 0 and subtotal > 0:
+        total = round(subtotal + vat_amount, 2)
+
     db.execute('''
         INSERT OR REPLACE INTO offers (
             id, offer_number, client_id, client_name, client_address, client_vat_cf, date, execution_time, worksite_address,
@@ -265,10 +310,10 @@ def save_offer():
             payment_method, payment_terms, legal_terms, notes, status, custom_logo_url, project_id
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
-        data['id'], offer_number, data['clientId'], data['clientName'], data.get('clientAddress'), data.get('clientVatOrCf'),
-        data['date'], data.get('executionTime'), data.get('worksiteAddress'),
-        data.get('pricingMode', 'itemized'), data.get('lumpSumAmount'), data.get('discount', 0),
-        data.get('subtotal', 0), data.get('vatRate', 22), data.get('vatAmount', 0), data.get('total', 0),
+        data['id'], offer_number, data.get('clientId'), client_name, client_address, client_vat_cf,
+        data.get('date'), data.get('executionTime'), data.get('worksiteAddress'),
+        pricing_mode, lump_sum, discount,
+        subtotal, vat_rate, vat_amount, total,
         data.get('paymentMethod'), data.get('paymentTerms'), data.get('legalTerms'), data.get('notes'),
         data.get('status', 'Bozza'), data.get('customLogoUrl'), data.get('projectId')
     ))
@@ -281,7 +326,7 @@ def save_offer():
             INSERT INTO offer_items (id, offer_id, product_id, item_type, description, unit, quantity, unit_price, total)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (item['id'], data['id'], item.get('productId'), item.get('itemType', 'Merce'), item.get('description'),
-              item.get('unit'), item.get('quantity'), item.get('unitPrice'), item.get('total')))
+              item.get('unit'), float(item.get('quantity', 0) or 0), float(item.get('unitPrice', 0) or 0), float(item.get('total', 0) or 0)))
     
     db.commit()
     return jsonify({'status': 'success', 'id': data['id'], 'offer_number': offer_number})
@@ -299,6 +344,7 @@ def update_offer_status(id):
 @login_required
 def delete_offer(id):
     db = get_db()
+    db.execute('DELETE FROM offer_items WHERE offer_id = ?', (id,))
     db.execute('DELETE FROM offers WHERE id = ?', (id,))
     db.commit()
     return jsonify({'status': 'success'})
@@ -365,16 +411,47 @@ def save_invoice():
         existing = db.execute('SELECT invoice_number FROM invoices WHERE id = ?', (data['id'],)).fetchone()
         invoice_number = existing['invoice_number'] if existing else generate_invoice_number()
     
+    vat_rate = float(data['vatRate']) if data.get('vatRate') is not None and str(data['vatRate']).strip() != '' else 22.0
+
+    # Resolve client details if missing
+    client_name = data.get('clientName')
+    client_address = data.get('clientAddress')
+    client_vat_cf = data.get('clientVatCf') or data.get('clientVatOrCf')
+    if not client_name and data.get('clientId'):
+        client_row = db.execute('SELECT * FROM clients WHERE id = ?', (data['clientId'],)).fetchone()
+        if client_row:
+            client_name = client_row['name']
+            client_address = client_address or client_row['address']
+            client_vat_cf = client_vat_cf or (client_row['vat'] or client_row['cf'])
+    client_name = client_name or 'Cliente'
+
+    items = data.get('items', [])
+    items_gross = sum(
+        float(item.get('quantity', 0) or 0) * float(item.get('unitPrice', 0) or 0)
+        for item in items
+    )
+    subtotal = float(data.get('subtotal', 0) or 0)
+    if subtotal == 0 and items_gross > 0:
+        subtotal = items_gross
+    
+    vat_amount = float(data.get('vatAmount', 0) or 0)
+    if vat_amount == 0 and subtotal > 0 and vat_rate > 0:
+        vat_amount = round(subtotal * (vat_rate / 100), 2)
+    
+    total = float(data.get('total', 0) or 0)
+    if total == 0 and subtotal > 0:
+        total = round(subtotal + vat_amount, 2)
+
     db.execute('''
         INSERT OR REPLACE INTO invoices (
             id, invoice_number, offer_id, client_id, client_name, client_address, client_vat_cf,
             date, due_date, subtotal, vat_rate, vat_amount, total, payment_method, notes, status
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
-        data['id'], invoice_number, data.get('offerId'), data['clientId'], data['clientName'],
-        data.get('clientAddress'), data.get('clientVatCf'),
-        data['date'], data.get('dueDate'),
-        data.get('subtotal', 0), data.get('vatRate', 22), data.get('vatAmount', 0), data.get('total', 0),
+        data['id'], invoice_number, data.get('offerId'), data.get('clientId'), client_name,
+        client_address, client_vat_cf,
+        data.get('date'), data.get('dueDate'),
+        subtotal, vat_rate, vat_amount, total,
         data.get('paymentMethod'), data.get('notes'), data.get('status', 'Emessa')
     ))
     
@@ -385,8 +462,8 @@ def save_invoice():
         db.execute('''
             INSERT INTO invoice_items (id, invoice_id, description, quantity, unit, unit_price, total)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (item['id'], data['id'], item.get('description'), item.get('quantity'),
-              item.get('unit'), item.get('unitPrice'), item.get('total')))
+        ''', (item['id'], data['id'], item.get('description'), float(item.get('quantity', 0) or 0),
+              item.get('unit'), float(item.get('unitPrice', 0) or 0), float(item.get('total', 0) or 0)))
     
     db.commit()
     return jsonify({'status': 'success', 'id': data['id'], 'invoice_number': invoice_number})
@@ -404,6 +481,7 @@ def update_invoice_status(id):
 @login_required
 def delete_invoice(id):
     db = get_db()
+    db.execute('DELETE FROM invoice_items WHERE invoice_id = ?', (id,))
     db.execute('DELETE FROM invoices WHERE id = ?', (id,))
     db.commit()
     return jsonify({'status': 'success'})
@@ -439,11 +517,12 @@ def save_project():
     db = get_db()
     if not data.get('id'):
         data['id'] = generate_id()
+    budget = float(data.get('budget', 0) or 0)
     db.execute('''
         INSERT OR REPLACE INTO projects (id, name, client_id, client_name, address, start_date, end_date, budget, status, notes)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (data['id'], data['name'], data.get('clientId'), data.get('clientName'), data.get('address'),
-          data.get('startDate'), data.get('endDate'), data.get('budget', 0), data.get('status', 'Pianificato'), data.get('notes')))
+          data.get('startDate'), data.get('endDate'), budget, data.get('status', 'Pianificato'), data.get('notes')))
     db.commit()
     return jsonify({'status': 'success', 'id': data['id']})
 
@@ -473,10 +552,11 @@ def save_expense():
     db = get_db()
     if not data.get('id'):
         data['id'] = generate_id()
+    amount = float(data.get('amount', 0) or 0)
     db.execute('''
         INSERT OR REPLACE INTO expenses (id, date, description, amount, category, supplier_id, supplier_name, project_id, project_name, payment_method, notes)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (data['id'], data['date'], data['description'], data['amount'], data['category'],
+    ''', (data['id'], data['date'], data['description'], amount, data['category'],
           data.get('supplierId'), data.get('supplierName'), data.get('projectId'), data.get('projectName'),
           data.get('paymentMethod'), data.get('notes')))
     db.commit()
@@ -642,13 +722,18 @@ def migrate_db():
             print(f"Migration offer_items warning: {e}")
 
 
-if __name__ == '__main__':
+# Inizializzazione automatica e migrazione DB su avvio (funziona sia su WSGI/PythonAnywhere che in locale)
+try:
     with app.app_context():
-        db = get_db()
+        _db = get_db()
         try:
-            db.execute('SELECT 1 FROM clients LIMIT 1')
+            _db.execute('SELECT 1 FROM clients LIMIT 1')
         except sqlite3.OperationalError:
             print("Initializing Database...")
             init_db()
     migrate_db()
+except Exception as _e:
+    print(f"Startup DB init/migration notice: {_e}")
+
+if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

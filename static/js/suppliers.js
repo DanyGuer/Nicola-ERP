@@ -14,7 +14,7 @@ function renderSuppliers(suppliers) {
     suppliers.forEach(s => {
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50 cursor-pointer';
-        tr.onclick = (e) => { if (e.target.tagName !== 'BUTTON') suppEdit(s); };
+        tr.onclick = (e) => { if (!e.target.closest('button')) suppEdit(s); };
         tr.innerHTML = `
             <td class="px-6 py-4"><div class="font-medium">${s.name}</div><div class="text-xs text-slate-400">${s.vat ? 'P.IVA: ' + s.vat : ''}</div></td>
             <td class="px-6 py-4"><span class="px-2 py-1 rounded-full text-xs bg-slate-100">${s.category || '-'}</span></td>

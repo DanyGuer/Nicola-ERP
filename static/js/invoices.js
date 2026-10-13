@@ -23,7 +23,7 @@ function renderInvoices(invoices) {
     invoices.forEach(inv => {
         const div = document.createElement('div');
         div.className = 'bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:border-indigo-300 transition-colors cursor-pointer';
-        div.onclick = (e) => { if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'SELECT') invEditInvoice(inv); };
+        div.onclick = (e) => { if (!e.target.closest('button') && !e.target.closest('select')) invEditInvoice(inv); };
         div.innerHTML = `
             <div class="flex justify-between items-start mb-3">
                 <div><h3 class="font-bold text-lg">${inv.invoice_number}</h3><p class="text-sm text-slate-500">${inv.client_name} · ${new Date(inv.date).toLocaleDateString('it-IT')}</p></div>
@@ -61,12 +61,63 @@ function invOpenInvoiceModal() {
     invOffers.filter(o => o.status === 'Accettata').forEach(o => { oSel.innerHTML += `<option value="${o.id}">${o.client_name} - ${new Date(o.date).toLocaleDateString('it-IT')} (${formatCurrency(o.total)})</option>`; });
 
     renderInvoiceItems();
+    invSetVatRate(22);
     document.getElementById('invoice-modal').classList.remove('hidden');
     lucide.createIcons();
 }
 function invCloseInvoiceModal() { document.getElementById('invoice-modal').classList.add('hidden'); }
 
 function invInvoiceClientChange() { }
+
+function invVatSelectChanged() {
+    const sel = document.getElementById('inv-vat-select');
+    const input = document.getElementById('inv-vat-rate');
+    if (!sel || !input) return;
+    if (sel.value !== 'custom') {
+        input.value = sel.value;
+    } else {
+        input.focus();
+        input.select();
+    }
+    invCalcInvoice();
+}
+
+function invVatInputChanged() {
+    const sel = document.getElementById('inv-vat-select');
+    const input = document.getElementById('inv-vat-rate');
+    if (!sel || !input) return;
+    const val = input.value.trim();
+    if (['22', '10', '4', '0'].includes(val)) {
+        sel.value = val;
+    } else {
+        sel.value = 'custom';
+    }
+    invCalcInvoice();
+}
+
+function invGetVatRate() {
+    const input = document.getElementById('inv-vat-rate');
+    if (!input) return 22;
+    const val = input.value.trim();
+    if (val === '') return 22;
+    const num = parseFloat(val);
+    return isNaN(num) ? 22 : num;
+}
+
+function invSetVatRate(rate) {
+    const vRate = (rate !== null && rate !== undefined) ? rate : 22;
+    const input = document.getElementById('inv-vat-rate');
+    const sel = document.getElementById('inv-vat-select');
+    if (input) input.value = vRate;
+    if (sel) {
+        const strVal = String(vRate);
+        if (['22', '10', '4', '0'].includes(strVal)) {
+            sel.value = strVal;
+        } else {
+            sel.value = 'custom';
+        }
+    }
+}
 
 function invImportFromOffer() {
     const offerId = document.getElementById('inv-invoice-offer').value;
@@ -75,8 +126,7 @@ function invImportFromOffer() {
     if (!offer) return;
 
     document.getElementById('inv-invoice-client').value = offer.client_id;
-    const form = document.getElementById('invoice-form');
-    form.querySelector('[name="vatRate"]').value = offer.vat_rate || 22;
+    invSetVatRate(offer.vat_rate);
 
     invoiceItems = (offer.items || []).map(i => ({
         description: i.description, quantity: i.quantity, unit: i.unit || 'corpo',
@@ -118,7 +168,7 @@ function invUpdateInvItem(i, field, val) {
 function invCalcInvoice() {
     const form = document.getElementById('invoice-form');
     const subtotal = invoiceItems.reduce((s, i) => s + (i.quantity * i.unitPrice), 0);
-    const vatRate = parseFloat(form.querySelector('[name="vatRate"]').value) || 22;
+    const vatRate = invGetVatRate();
     const vatAmount = subtotal * vatRate / 100;
     const total = subtotal + vatAmount;
     form.querySelector('[name="subtotal"]').value = subtotal.toFixed(2);
@@ -132,13 +182,18 @@ async function invSaveInvoice() {
     if (!fd.clientId) { alert('Seleziona un cliente'); return; }
     const opt = cSel.selectedOptions[0];
 
+    const subtotal = parseFloat(fd.subtotal) || 0;
+    const vatRate = invGetVatRate();
+    const vatAmount = subtotal * vatRate / 100;
+    const total = subtotal + vatAmount;
+
     const data = {
         id: fd.id || null,
         clientId: fd.clientId, clientName: opt.dataset.name, clientAddress: opt.dataset.address, clientVatCf: opt.dataset.vat,
         offerId: fd.offerId || null, date: fd.date, dueDate: fd.dueDate || null,
-        subtotal: parseFloat(fd.subtotal) || 0, vatRate: parseFloat(fd.vatRate) || 22,
-        vatAmount: (parseFloat(fd.subtotal) || 0) * (parseFloat(fd.vatRate) || 22) / 100,
-        total: parseFloat(fd.total) || 0,
+        subtotal: subtotal, vatRate: vatRate,
+        vatAmount: vatAmount,
+        total: total,
         paymentMethod: fd.paymentMethod, notes: fd.notes, status: 'Emessa',
         items: invoiceItems
     };
@@ -156,7 +211,7 @@ function invEditInvoice(inv) {
     form.querySelector('[name="date"]').value = inv.date;
     form.querySelector('[name="dueDate"]').value = inv.due_date || '';
     form.querySelector('[name="paymentMethod"]').value = inv.payment_method || 'Bonifico';
-    form.querySelector('[name="vatRate"]').value = inv.vat_rate || 22;
+    invSetVatRate(inv.vat_rate);
     form.querySelector('[name="notes"]').value = inv.notes || '';
     if (inv.offer_id) document.getElementById('inv-invoice-offer').value = inv.offer_id;
 
