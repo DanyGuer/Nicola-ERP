@@ -216,16 +216,35 @@ function salesSelectClient() {
 
 // ---- ITEMS ----
 
-function salesAddItem() {
-    currentItems.push({
-        id: Date.now().toString(),
+function salesCreateEmptyItem() {
+    return {
+        id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
         itemType: 'Merce',
         description: '',
         unit: 'corpo',
         quantity: 1,
         unitPrice: 0,
         total: 0
-    });
+    };
+}
+
+function salesAddItem() {
+    currentItems.push(salesCreateEmptyItem());
+    renderSalesItems();
+}
+
+function salesInsertItem(index) {
+    const safeIndex = Math.max(0, Math.min(index, currentItems.length));
+    currentItems.splice(safeIndex, 0, salesCreateEmptyItem());
+    renderSalesItems();
+}
+
+function salesMoveItem(index, direction) {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= currentItems.length) return;
+    const temp = currentItems[index];
+    currentItems[index] = currentItems[targetIndex];
+    currentItems[targetIndex] = temp;
     renderSalesItems();
 }
 
@@ -241,13 +260,15 @@ function renderSalesItems() {
 
         const priceInput = disablePrice
             ? `<input type="number" step="0.01" class="w-full border p-1 text-sm rounded text-right bg-slate-100 text-slate-400 cursor-not-allowed" value="${isNote ? 0 : item.unitPrice}" readonly tabindex="-1">`
-            : `<input type="number" step="0.01" onchange="salesUpdateItem(${index}, 'unitPrice', parseFloat(this.value))" class="w-full border p-1 text-sm rounded text-right" value="${item.unitPrice}">`;
+            : `<input type="number" step="0.01" oninput="salesUpdateItem(${index}, 'unitPrice', parseFloat(this.value) || 0)" class="w-full border p-1 text-sm rounded text-right" value="${item.unitPrice}">`;
         const totalCell = disablePrice
-            ? `<span class="text-slate-300 text-xs italic">—</span>`
-            : formatCurrency(item.quantity * item.unitPrice);
+            ? `<span id="sales-item-total-${index}" class="text-slate-300 text-xs italic">—</span>`
+            : `<span id="sales-item-total-${index}">${formatCurrency(item.quantity * item.unitPrice)}</span>`;
 
         const merceSelected = item.itemType !== 'Note' ? 'selected' : '';
         const noteSelected = item.itemType === 'Note' ? 'selected' : '';
+        const escapedDesc = String(item.description || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+        const escapedUnit = String(item.unit || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;');
 
         tr.innerHTML = `
             <td class="px-2 py-2">
@@ -257,23 +278,38 @@ function renderSalesItems() {
                 </select>
             </td>
             <td class="px-2 py-2">
-                <input type="text" onchange="salesUpdateItem(${index}, 'description', this.value)" 
-                    class="w-full border p-1 text-sm rounded" value="${item.description || ''}">
+                <input type="text" oninput="salesUpdateItem(${index}, 'description', this.value)" 
+                    class="w-full border p-1 text-sm rounded" value="${escapedDesc}">
             </td>
             <td class="px-2 py-2">
-                <input type="text" onchange="salesUpdateItem(${index}, 'unit', this.value)" 
-                    class="w-full border p-1 text-sm rounded" value="${item.unit || ''}">
+                <input type="text" oninput="salesUpdateItem(${index}, 'unit', this.value)" 
+                    class="w-full border p-1 text-sm rounded" value="${escapedUnit}">
             </td>
             <td class="px-2 py-2">
-                <input type="number" step="0.5" onchange="salesUpdateItem(${index}, 'quantity', parseFloat(this.value))" 
+                <input type="number" step="0.5" oninput="salesUpdateItem(${index}, 'quantity', parseFloat(this.value) || 0)" 
                     class="w-full border p-1 text-sm rounded text-right" value="${item.quantity}">
             </td>
             <td class="px-2 py-2">${priceInput}</td>
             <td class="px-4 py-2 text-right font-medium">${totalCell}</td>
-            <td class="px-2 py-2 text-center">
-                <button onclick="salesRemoveItem(${index})" class="text-red-500 hover:text-red-700">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                </button>
+            <td class="px-2 py-2 text-center whitespace-nowrap">
+                <div class="inline-flex items-center gap-1">
+                    <button type="button" onclick="salesInsertItem(${index})" title="Inserisci riga sopra"
+                        class="px-1.5 py-0.5 text-xs font-medium bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded border border-indigo-200">+Sopra</button>
+                    <button type="button" onclick="salesInsertItem(${index + 1})" title="Inserisci riga sotto"
+                        class="px-1.5 py-0.5 text-xs font-medium bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded border border-indigo-200">+Sotto</button>
+                    <button type="button" onclick="salesMoveItem(${index}, -1)" title="Sposta su"
+                        class="p-1 text-slate-500 hover:text-indigo-600 disabled:opacity-30" ${index === 0 ? 'disabled' : ''}>
+                        <i data-lucide="arrow-up" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <button type="button" onclick="salesMoveItem(${index}, 1)" title="Sposta giù"
+                        class="p-1 text-slate-500 hover:text-indigo-600 disabled:opacity-30" ${index === currentItems.length - 1 ? 'disabled' : ''}>
+                        <i data-lucide="arrow-down" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <button type="button" onclick="salesRemoveItem(${index})" title="Elimina riga"
+                        class="p-1 text-red-500 hover:text-red-700">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
             </td>
         `;
         tbody.appendChild(tr);
@@ -294,8 +330,12 @@ function salesUpdateItemType(index, type) {
 
 function salesUpdateItem(index, field, value) {
     currentItems[index][field] = value;
-    currentItems[index].total = currentItems[index].quantity * currentItems[index].unitPrice;
-    renderSalesItems();
+    currentItems[index].total = (currentItems[index].quantity || 0) * (currentItems[index].unitPrice || 0);
+    const totalEl = document.getElementById(`sales-item-total-${index}`);
+    if (totalEl && salesGetPricingMode() !== 'lump_sum' && currentItems[index].itemType !== 'Note') {
+        totalEl.innerText = formatCurrency(currentItems[index].total);
+    }
+    salesCalcTotals();
 }
 
 function salesRemoveItem(index) {

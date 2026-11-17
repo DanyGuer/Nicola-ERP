@@ -247,7 +247,7 @@ def get_offers():
     cursor = db.execute('SELECT * FROM offers ORDER BY created_at DESC')
     offers = [dict(row) for row in cursor.fetchall()]
     for offer in offers:
-        cursor_items = db.execute('SELECT * FROM offer_items WHERE offer_id = ?', (offer['id'],))
+        cursor_items = db.execute('SELECT * FROM offer_items WHERE offer_id = ? ORDER BY rowid ASC', (offer['id'],))
         offer['items'] = [dict(row) for row in cursor_items.fetchall()]
     return jsonify(offers)
 
