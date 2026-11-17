@@ -259,14 +259,20 @@ def save_offer():
     if not data.get('id'):
         data['id'] = generate_id()
     
+    existing = db.execute('SELECT offer_number, status, project_id FROM offers WHERE id = ?', (data['id'],)).fetchone()
     offer_number = data.get('offerNumber')
     if not offer_number:
-        existing = db.execute('SELECT offer_number FROM offers WHERE id = ?', (data['id'],)).fetchone()
         offer_number = existing['offer_number'] if existing else generate_offer_number()
     
     vat_rate = float(data['vatRate']) if data.get('vatRate') is not None and str(data['vatRate']).strip() != '' else 22.0
     discount = float(data.get('discount', 0) or 0)
+    discount_type = data.get('discountType', 'eur') or 'eur'
+    discount_value = float(data.get('discountValue', discount) or 0)
+    validity_days = int(data.get('validityDays', 30) or 30)
+    subject = (data.get('subject') or '').strip()
     lump_sum = float(data['lumpSumAmount']) if data.get('lumpSumAmount') is not None and str(data['lumpSumAmount']).strip() != '' else None
+    offer_status = data.get('status') or (existing['status'] if existing else 'Bozza')
+    project_id = data.get('projectId') if data.get('projectId') is not None else (existing['project_id'] if existing else None)
 
     # Resolve client details if missing
     client_name = data.get('clientName')
@@ -305,17 +311,17 @@ def save_offer():
 
     db.execute('''
         INSERT OR REPLACE INTO offers (
-            id, offer_number, client_id, client_name, client_address, client_vat_cf, date, execution_time, worksite_address,
-            pricing_mode, lump_sum_amount, discount, subtotal, vat_rate, vat_amount, total,
+            id, offer_number, client_id, client_name, client_address, client_vat_cf, date, subject, validity_days, execution_time, worksite_address,
+            pricing_mode, lump_sum_amount, discount, discount_type, discount_value, subtotal, vat_rate, vat_amount, total,
             payment_method, payment_terms, legal_terms, notes, status, custom_logo_url, project_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         data['id'], offer_number, data.get('clientId'), client_name, client_address, client_vat_cf,
-        data.get('date'), data.get('executionTime'), data.get('worksiteAddress'),
-        pricing_mode, lump_sum, discount,
+        data.get('date'), subject, validity_days, data.get('executionTime'), data.get('worksiteAddress'),
+        pricing_mode, lump_sum, discount, discount_type, discount_value,
         subtotal, vat_rate, vat_amount, total,
         data.get('paymentMethod'), data.get('paymentTerms'), data.get('legalTerms'), data.get('notes'),
-        data.get('status', 'Bozza'), data.get('customLogoUrl'), data.get('projectId')
+        offer_status, data.get('customLogoUrl'), project_id
     ))
     
     db.execute('DELETE FROM offer_items WHERE offer_id = ?', (data['id'],))
@@ -339,6 +345,32 @@ def update_offer_status(id):
     db.execute('UPDATE offers SET status = ? WHERE id = ?', (data['status'], id))
     db.commit()
     return jsonify({'status': 'success'})
+
+@app.route('/api/offers/<id>/create-project', methods=['POST'])
+@login_required
+def create_project_from_offer(id):
+    db = get_db()
+    offer = db.execute('SELECT * FROM offers WHERE id = ?', (id,)).fetchone()
+    if not offer:
+        return jsonify({'error': 'Offerta non trovata'}), 404
+    offer = dict(offer)
+    if offer.get('project_id'):
+        existing_proj = db.execute('SELECT * FROM projects WHERE id = ?', (offer['project_id'],)).fetchone()
+        if existing_proj:
+            return jsonify({'status': 'already_exists', 'project_id': offer['project_id']})
+    proj_id = generate_id()
+    proj_name = (offer.get('subject') or '').strip() or f"Cantiere {offer.get('client_name', '')}".strip()
+    proj_addr = offer.get('worksite_address') or offer.get('client_address') or ''
+    db.execute('''
+        INSERT INTO projects (id, name, client_id, client_name, address, start_date, end_date, budget, status, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (
+        proj_id, proj_name, offer.get('client_id'), offer.get('client_name'),
+        proj_addr, offer.get('date'), '', float(offer.get('total') or 0), 'In Corso', offer.get('notes') or ''
+    ))
+    db.execute("UPDATE offers SET project_id = ?, status = 'Accettata' WHERE id = ?", (proj_id, id))
+    db.commit()
+    return jsonify({'status': 'success', 'project_id': proj_id, 'project_name': proj_name})
 
 @app.route('/api/offers/<id>', methods=['DELETE'])
 @login_required
@@ -720,6 +752,20 @@ def migrate_db():
                 db.commit()
         except Exception as e:
             print(f"Migration offer_items warning: {e}")
+        try:
+            offer_cols = [row[1] for row in db.execute('PRAGMA table_info(offers)').fetchall()]
+            new_offer_cols = [
+                ('subject', "TEXT DEFAULT ''"),
+                ('validity_days', "INTEGER DEFAULT 30"),
+                ('discount_type', "TEXT DEFAULT 'eur'"),
+                ('discount_value', "REAL DEFAULT 0")
+            ]
+            for col_name, col_def in new_offer_cols:
+                if col_name not in offer_cols:
+                    db.execute(f"ALTER TABLE offers ADD COLUMN {col_name} {col_def}")
+            db.commit()
+        except Exception as e:
+            print(f"Migration offers warning: {e}")
 
 
 # Inizializzazione automatica e migrazione DB su avvio (funziona sia su WSGI/PythonAnywhere che in locale)

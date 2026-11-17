@@ -236,11 +236,37 @@
 
                 <!-- SALES -->
                 <div id="view-sales" class="view-section hidden-view">
-                    <div class="flex justify-between items-center mb-6">
-                        <h1 class="text-2xl font-bold">Offerte & Preventivi</h1>
+                    <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+                        <div>
+                            <h1 class="text-2xl font-bold">Offerte & Preventivi</h1>
+                            <p class="text-sm text-slate-500">Gestisci, duplica e converti i tuoi preventivi in cantieri o fatture</p>
+                        </div>
                         <button onclick="salesOpenModal()"
-                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"><i
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg flex items-center gap-2 font-medium shadow-sm"><i
                                 data-lucide="plus" class="w-4 h-4"></i> Crea Offerta</button>
+                    </div>
+                    <!-- KPI Riepilogo Offerte -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5" id="sales-kpi-bar"></div>
+                    <!-- Barra Ricerca e Filtri Stato -->
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-5 flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+                        <div class="relative flex-1">
+                            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                            <input type="text" id="sales-search-input" oninput="salesFilterList()"
+                                placeholder="Cerca per cliente, oggetto lavoro o indirizzo cantiere..."
+                                class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div class="flex flex-wrap gap-1.5" id="sales-status-filters">
+                            <button type="button" onclick="salesSetStatusFilter('ALL')" data-status="ALL"
+                                class="sales-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white">Tutte</button>
+                            <button type="button" onclick="salesSetStatusFilter('Bozza')" data-status="Bozza"
+                                class="sales-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200">Bozze</button>
+                            <button type="button" onclick="salesSetStatusFilter('Inviata')" data-status="Inviata"
+                                class="sales-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100">Inviate</button>
+                            <button type="button" onclick="salesSetStatusFilter('Accettata')" data-status="Accettata"
+                                class="sales-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100">Accettate</button>
+                            <button type="button" onclick="salesSetStatusFilter('Rifiutata')" data-status="Rifiutata"
+                                class="sales-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-50 text-red-700 hover:bg-red-100">Rifiutate</button>
+                        </div>
                     </div>
                     <div class="grid grid-cols-1 gap-4" id="sales-list"></div>
                 </div>
@@ -709,29 +735,77 @@
 
     <!-- SALES MODAL (Full Screen) -->
     <div id="sales-modal" class="fixed inset-0 bg-white z-50 hidden overflow-y-auto">
-        <div class="max-w-5xl mx-auto p-6">
-            <div class="flex justify-between items-center mb-8 border-b border-slate-100 pb-4">
+        <div class="max-w-6xl mx-auto p-6">
+            <div class="flex flex-wrap justify-between items-center gap-3 mb-6 border-b border-slate-100 pb-4 sticky top-0 bg-white/95 backdrop-blur z-20 pt-2">
                 <div>
-                    <h2 class="text-2xl font-bold text-slate-800">Nuova Offerta</h2>
+                    <h2 class="text-2xl font-bold text-slate-800" id="sales-modal-title">Nuova Offerta</h2>
                     <p class="text-sm text-slate-500">Compila i dettagli del preventivo</p>
                 </div>
-                <div class="flex gap-2">
-                    <button onclick="salesCloseModal()"
-                        class="px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg font-medium">Annulla</button>
-                    <button type="button" onclick="salesGeneratePDF()"
-                        class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-medium shadow-sm flex items-center gap-2"><i
-                            data-lucide="printer" class="w-4 h-4"></i> Anteprima PDF</button>
-                    <button onclick="salesSave()"
-                        class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium shadow-sm">Salva</button>
+                <div class="flex flex-wrap items-center gap-2">
+                    <select id="sales-status-select" name="status"
+                        class="border border-slate-300 rounded-lg px-3 py-2 text-sm font-semibold bg-slate-50 text-slate-700">
+                        <option value="Bozza">Stato: Bozza</option>
+                        <option value="Inviata">Stato: Inviata</option>
+                        <option value="Accettata">Stato: Accettata</option>
+                        <option value="Rifiutata">Stato: Rifiutata</option>
+                    </select>
+                    <button type="button" id="sales-btn-duplicate-modal" onclick="salesDuplicateCurrent()"
+                        class="hidden px-3 py-2 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg font-medium text-sm flex items-center gap-1.5"
+                        title="Crea una copia di questo preventivo"><i data-lucide="copy" class="w-4 h-4"></i> Duplica</button>
+                    <button type="button" onclick="salesCloseModal()"
+                        class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium text-sm">Chiudi</button>
+                    <button type="button" onclick="salesGeneratePDF(false)"
+                        class="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-medium shadow-sm flex items-center gap-1.5 text-sm"><i
+                            data-lucide="eye" class="w-4 h-4"></i> Anteprima PDF</button>
+                    <button type="button" onclick="salesGeneratePDF(true)"
+                        class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium shadow-sm flex items-center gap-1.5 text-sm"
+                        title="Scarica il PDF rinominato con il nome del cliente"><i
+                            data-lucide="download" class="w-4 h-4"></i> Scarica PDF</button>
+                    <button type="button" onclick="salesSave()"
+                        class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium shadow-sm text-sm flex items-center gap-1.5"><i
+                            data-lucide="save" class="w-4 h-4"></i> Salva</button>
                 </div>
             </div>
-            <form id="sales-form" class="space-y-8">
+            <form id="sales-form" class="space-y-6">
                 <input type="hidden" name="id">
+                <datalist id="sales-units-list">
+                    <option value="corpo"></option>
+                    <option value="mq"></option>
+                    <option value="ml"></option>
+                    <option value="mc"></option>
+                    <option value="cad"></option>
+                    <option value="n."></option>
+                    <option value="ore"></option>
+                    <option value="kg"></option>
+                </datalist>
                 <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                    <h3 class="font-semibold text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="user"
-                            class="w-5 h-5 text-indigo-600"></i> Dati Cliente</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div><label class="block text-sm font-medium text-slate-600 mb-1">Seleziona
+                    <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
+                        <h3 class="font-semibold text-slate-800 flex items-center gap-2"><i data-lucide="user"
+                                class="w-5 h-5 text-indigo-600"></i> Dati Cliente & Oggetto Offerta</h3>
+                        <button type="button" onclick="salesToggleQuickClient()"
+                            class="text-xs bg-white hover:bg-indigo-50 text-indigo-600 border border-indigo-200 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1 shadow-sm">
+                            <i data-lucide="user-plus" class="w-3.5 h-3.5"></i> + Nuovo Cliente Rapido
+                        </button>
+                    </div>
+                    <!-- Box Creazione Rapida Cliente (nascosto di default) -->
+                    <div id="sales-quick-client-box" class="hidden mb-5 p-4 bg-indigo-50/70 border border-indigo-200 rounded-xl">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-800">Nuovo Cliente al Volo (viene salvato anche in Clienti)</span>
+                            <button type="button" onclick="salesToggleQuickClient()" class="text-xs text-slate-500 hover:text-slate-700">Chiudi ✕</button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                            <input type="text" id="sqc-name" placeholder="Nome / Ragione Sociale *" class="border rounded-lg p-2 text-sm bg-white">
+                            <input type="text" id="sqc-address" placeholder="Indirizzo completo" class="border rounded-lg p-2 text-sm bg-white">
+                            <input type="text" id="sqc-vat" placeholder="P.IVA o Codice Fiscale" class="border rounded-lg p-2 text-sm bg-white">
+                            <div class="flex gap-2">
+                                <input type="text" id="sqc-phone" placeholder="Telefono / Email" class="border rounded-lg p-2 text-sm bg-white flex-1">
+                                <button type="button" onclick="salesSaveQuickClient()"
+                                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap">Salva e Usa</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="md:col-span-2"><label class="block text-sm font-medium text-slate-600 mb-1">Seleziona
                                 Cliente</label><select id="sales-client-select"
                                 class="w-full border rounded-lg p-2.5 bg-white" onchange="salesSelectClient()">
                                 <option value="">-- Seleziona --</option>
@@ -739,8 +813,23 @@
                         <div><label class="block text-sm font-medium text-slate-600 mb-1">Data
                                 Offerta</label><input type="date" name="date" required
                                 class="w-full border rounded-lg p-2.5 bg-white"></div>
+                        <div><label class="block text-sm font-medium text-slate-600 mb-1">Validità
+                                Preventivo</label><select name="validityDays" id="sales-validity-days"
+                                class="w-full border rounded-lg p-2.5 bg-white">
+                                <option value="15">15 giorni</option>
+                                <option value="30" selected>30 giorni</option>
+                                <option value="60">60 giorni</option>
+                                <option value="90">90 giorni</option>
+                                <option value="0">Non specificata</option>
+                            </select></div>
+                        <div class="md:col-span-4">
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Oggetto / Titolo del Preventivo <span class="text-xs text-slate-400 font-normal">(visibile nella lista offerte e nell'intestazione del PDF)</span></label>
+                            <input type="text" name="subject" id="sales-subject"
+                                placeholder="es. Ristrutturazione completa bagno padronale / Realizzazione arredo su misura..."
+                                class="w-full border rounded-lg p-2.5 bg-white font-medium text-slate-800">
+                        </div>
                         <div
-                            class="md:col-span-2 grid grid-cols-3 gap-4 text-sm text-slate-500 bg-white p-4 rounded-lg border">
+                            class="md:col-span-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-slate-500 bg-white p-4 rounded-lg border">
                             <div><span
                                     class="block text-xs font-bold uppercase tracking-wider text-slate-400">Indirizzo</span><span
                                     id="sales-client-address">-</span></div>
@@ -756,9 +845,19 @@
                 <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                     <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
                         <h3 class="font-semibold text-slate-800 flex items-center gap-2"><i data-lucide="package"
-                                class="w-5 h-5 text-indigo-600"></i> Articoli e Servizi
+                                class="w-5 h-5 text-indigo-600"></i> Articoli, Capitoli e Lavorazioni
                         </h3>
-                        <div class="flex items-center gap-2">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <!-- Inserimento rapido da Listino -->
+                            <div class="flex items-center gap-1">
+                                <select id="sales-catalog-select" onchange="salesAddFromCatalog(this.value)"
+                                    class="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 bg-slate-50 text-slate-700 max-w-xs">
+                                    <option value="">+ Inserisci voce da Listino...</option>
+                                </select>
+                            </div>
+                            <button type="button" onclick="salesAddSectionHeader()"
+                                class="text-xs bg-amber-50 text-amber-800 px-3 py-1.5 rounded-lg font-medium hover:bg-amber-100 border border-amber-200"
+                                title="Aggiunge una riga di titolo/capitolo per dividere le fasi di lavoro">+ Capitolo / Titolo</button>
                             <button type="button" onclick="salesInsertItem(0)"
                                 class="text-xs bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg font-medium hover:bg-indigo-100 border border-indigo-200">+ Riga all'inizio</button>
                             <button type="button" onclick="salesAddItem()"
@@ -794,13 +893,13 @@
                     <table class="w-full text-left text-sm">
                         <thead class="bg-slate-50 text-slate-500">
                             <tr>
-                                <th class="px-4 py-2 w-1/12">Tipo</th>
-                                <th class="px-4 py-2 w-5/12">Descrizione</th>
-                                <th class="px-4 py-2 w-1/12">Unità</th>
-                                <th class="px-4 py-2 w-1/12 text-right">Q.tà</th>
-                                <th class="px-4 py-2 w-2/12 text-right">Prezzo</th>
-                                <th class="px-4 py-2 w-2/12 text-right">Totale</th>
-                                <th class="px-2 py-2 text-center w-44">Azioni</th>
+                                <th class="px-2 py-2 w-28">Tipo</th>
+                                <th class="px-2 py-2">Descrizione</th>
+                                <th class="px-2 py-2 w-20">Unità</th>
+                                <th class="px-2 py-2 w-20 text-right">Q.tà</th>
+                                <th class="px-2 py-2 w-28 text-right">Prezzo</th>
+                                <th class="px-2 py-2 w-28 text-right">Totale</th>
+                                <th class="px-2 py-2 text-center w-52">Azioni</th>
                             </tr>
                         </thead>
                         <tbody id="sales-items-body" class="divide-y divide-slate-100"></tbody>
@@ -812,10 +911,16 @@
                                 <td></td>
                             </tr>
                             <tr>
-                                <td colspan="5" class="px-4 py-2 text-right text-red-500 font-normal">Sconto (€)
-                                    <input type="number" step="0.01" id="sales-discount" value="0"
-                                        class="w-20 text-right border rounded mx-1 text-sm text-red-600"
-                                        onchange="salesCalcTotals()">
+                                <td colspan="5" class="px-4 py-2 text-right text-red-500 font-normal">
+                                    <span>Sconto</span>
+                                    <select id="sales-discount-type" onchange="salesCalcTotals()"
+                                        class="border rounded px-1.5 py-1 text-xs bg-white text-red-600 font-semibold ml-1">
+                                        <option value="eur">€ (Euro)</option>
+                                        <option value="perc">% (Percentuale)</option>
+                                    </select>
+                                    <input type="number" step="0.01" min="0" id="sales-discount" value="0"
+                                        class="w-24 text-right border rounded px-1.5 py-1 mx-1 text-sm text-red-600 font-semibold bg-white"
+                                        oninput="salesCalcTotals()" onchange="salesCalcTotals()">
                                 </td>
                                 <td class="px-4 py-2 text-right text-red-500" id="sales-discount-display">- €
                                     0,00</td>
@@ -856,15 +961,29 @@
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                        <h3 class="font-semibold text-slate-800 mb-4">Dettagli Lavoro</h3>
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-semibold text-slate-800">Dettagli Lavoro</h3>
+                            <button type="button" onclick="salesCopyClientAddress()"
+                                class="text-xs text-indigo-600 hover:text-indigo-800 font-medium underline">Usa indirizzo cliente</button>
+                        </div>
                         <div class="space-y-4">
                             <div><label class="block text-sm font-medium text-slate-600 mb-1">Luogo di
-                                    esecuzione</label><input type="text" name="worksiteAddress"
+                                    esecuzione (Cantiere)</label><input type="text" name="worksiteAddress" id="sales-worksite-address"
+                                    placeholder="es. Via Roma 10, Bari"
                                     class="w-full border rounded-lg p-2.5 bg-white"></div>
-                            <div><label class="block text-sm font-medium text-slate-600 mb-1">Tempi di
-                                    esecuzione</label><input type="text" name="executionTime"
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Tempi di esecuzione</label>
+                                <input type="text" name="executionTime" id="sales-execution-time"
                                     placeholder="es. 30 giorni lavorativi"
-                                    class="w-full border rounded-lg p-2.5 bg-white"></div>
+                                    class="w-full border rounded-lg p-2.5 bg-white">
+                                <div class="flex flex-wrap gap-1.5 mt-2">
+                                    <button type="button" onclick="salesSetField('executionTime', '7 giorni lavorativi')" class="text-xs bg-white border border-slate-200 px-2 py-0.5 rounded hover:bg-indigo-50 text-slate-600">7 gg lav.</button>
+                                    <button type="button" onclick="salesSetField('executionTime', '15 giorni lavorativi')" class="text-xs bg-white border border-slate-200 px-2 py-0.5 rounded hover:bg-indigo-50 text-slate-600">15 gg lav.</button>
+                                    <button type="button" onclick="salesSetField('executionTime', '30 giorni lavorativi')" class="text-xs bg-white border border-slate-200 px-2 py-0.5 rounded hover:bg-indigo-50 text-slate-600">30 gg lav.</button>
+                                    <button type="button" onclick="salesSetField('executionTime', '60 giorni lavorativi')" class="text-xs bg-white border border-slate-200 px-2 py-0.5 rounded hover:bg-indigo-50 text-slate-600">60 gg lav.</button>
+                                    <button type="button" onclick="salesSetField('executionTime', 'Da concordare con la Direzione Lavori')" class="text-xs bg-white border border-slate-200 px-2 py-0.5 rounded hover:bg-indigo-50 text-slate-600">Da concordare</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
@@ -874,13 +993,23 @@
                                     Pagamento</label><select name="paymentMethod"
                                     class="w-full border rounded-lg p-2.5 bg-white">
                                     <option value="Bonifico Bancario">Bonifico Bancario</option>
+                                    <option value="Bonifico Parlante (Detrazione Fiscale)">Bonifico Parlante (Detrazione Fiscale)</option>
                                     <option value="Assegno">Assegno</option>
                                     <option value="Contanti">Contanti</option>
                                 </select></div>
-                            <div><label class="block text-sm font-medium text-slate-600 mb-1">Termini di
-                                    Pagamento</label><input type="text" name="paymentTerms"
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Termini di Pagamento <span class="text-xs text-slate-400 font-normal">(le % generano le rate nel PDF)</span></label>
+                                <input type="text" name="paymentTerms" id="sales-payment-terms"
                                     placeholder="es. Acconto 30%, Saldo 70%"
-                                    class="w-full border rounded-lg p-2.5 bg-white"></div>
+                                    class="w-full border rounded-lg p-2.5 bg-white">
+                                <div class="flex flex-wrap gap-1.5 mt-2">
+                                    <button type="button" onclick="salesSetField('paymentTerms', 'Acconto 30% alla firma, 40% a metà lavori, Saldo 30% a fine lavori')" class="text-xs bg-white border border-slate-200 px-2 py-0.5 rounded hover:bg-indigo-50 text-slate-600">30% - 40% - 30%</button>
+                                    <button type="button" onclick="salesSetField('paymentTerms', 'Acconto 50% alla conferma d\'ordine, Saldo 50% alla consegna')" class="text-xs bg-white border border-slate-200 px-2 py-0.5 rounded hover:bg-indigo-50 text-slate-600">50% - 50%</button>
+                                    <button type="button" onclick="salesSetField('paymentTerms', 'Acconto 40% alla firma, Saldo 60% a fine lavori')" class="text-xs bg-white border border-slate-200 px-2 py-0.5 rounded hover:bg-indigo-50 text-slate-600">40% - 60%</button>
+                                    <button type="button" onclick="salesSetField('paymentTerms', 'Acconto 20% alla firma, 40% inizio lavori, Saldo 40% fine lavori')" class="text-xs bg-white border border-slate-200 px-2 py-0.5 rounded hover:bg-indigo-50 text-slate-600">20% - 40% - 40%</button>
+                                    <button type="button" onclick="salesSetField('paymentTerms', 'Saldo 100% a fine lavori')" class="text-xs bg-white border border-slate-200 px-2 py-0.5 rounded hover:bg-indigo-50 text-slate-600">100% Fine lavori</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="col-span-1 md:col-span-2 bg-slate-50 p-6 rounded-xl border border-slate-200">

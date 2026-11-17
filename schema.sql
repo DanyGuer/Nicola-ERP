@@ -30,12 +30,16 @@ CREATE TABLE IF NOT EXISTS offers (
     client_address TEXT,
     client_vat_cf TEXT,
     date TEXT NOT NULL,
+    subject TEXT,
+    validity_days INTEGER DEFAULT 30,
     execution_time TEXT,
     worksite_address TEXT,
     
     pricing_mode TEXT DEFAULT 'itemized',
     lump_sum_amount REAL,
     discount REAL DEFAULT 0,
+    discount_type TEXT DEFAULT 'eur',
+    discount_value REAL DEFAULT 0,
     
     subtotal REAL DEFAULT 0,
     vat_rate REAL DEFAULT 22,
