@@ -1,0 +1,101 @@
+/* Mobile & Responsive Enhancements for MiniERP */
+
+@media (max-width: 767px) {
+    /* Prevent iOS Safari auto-zoom on input focus */
+    input, select, textarea {
+        font-size: 16px !important;
+    }
+
+    /* Transform Sales Items Table into Touch-Friendly Cards on Mobile */
+    #sales-items-table,
+    #sales-items-body {
+        display: block;
+        width: 100%;
+    }
+
+    #sales-items-table thead {
+        display: none;
+    }
+
+    #sales-items-body tr.sales-item-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.75rem;
+        padding: 0.75rem;
+        margin-bottom: 0.75rem;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+
+    #sales-items-body tr.sales-item-row.sales-chapter-row {
+        background: #fffbeb;
+        border-color: #fde68a;
+    }
+
+    #sales-items-body tr.sales-item-row > td {
+        display: block;
+        padding: 0 !important;
+        border: none !important;
+        width: 100% !important;
+    }
+
+    /* 1. Tipo (left) & 7. Azioni (right) on top row, or full width */
+    #sales-items-body tr.sales-item-row > td.cell-type {
+        grid-column: 1 / 2;
+         order: 1;
+    }
+
+    #sales-items-body tr.sales-item-row > td.cell-actions {
+        grid-column: 2 / 3;
+        order: 2;
+        text-align: right !important;
+        white-space: normal !important;
+    }
+
+    /* 2. Descrizione full width */
+    #sales-items-body tr.sales-item-row > td.cell-desc {
+        grid-column: 1 / -1;
+        order: 3;
+        margin-top: 0.25rem;
+    }
+
+    /* 3. Unità & 4. Quantità side by side */
+    #sales-items-body tr.sales-item-row > td.cell-unit {
+        grid-column: 1 / 2;
+        order: 4;
+    }
+
+    #sales-items-body tr.sales-item-row > td.cell-qty {
+        grid-column: 2 / 3;
+        order: 5;
+    }
+
+    /* 5. Prezzo & 6. Totale side by side */
+    #sales-items-body tr.sales-item-row > td.cell-price {
+        grid-column: 1 / 2;
+        order: 6;
+    }
+
+    #sales-items-body tr.sales-item-row > td.cell-total {
+        grid-column: 2 / 3;
+        order: 7;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-end;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.5rem;
+        padding: 0.35rem 0.6rem !important;
+    }
+
+    /* Hide unit/qty/price/total on mobile when row is Capitolo */
+    #sales-items-body tr.sales-item-row.sales-chapter-row > td.cell-unit,
+    #sales-items-body tr.sales-item-row.sales-chapter-row > td.cell-qty,
+    #sales-items-body tr.sales-item-row.sales-chapter-row > td.cell-price,
+    #sales-items-body tr.sales-item-row.sales-chapter-row > td.cell-total {
+        display: none !important;
+    }
+}

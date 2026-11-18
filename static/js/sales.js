@@ -661,21 +661,19 @@ function renderSalesItems() {
         const isChapter = item.itemType === 'Capitolo';
         const disablePrice = isLumpSum || isNote || isChapter;
 
-        if (isChapter) {
-            tr.className = 'bg-amber-50/70';
-        }
+        tr.className = isChapter ? 'sales-item-row sales-chapter-row bg-amber-50/70' : 'sales-item-row';
 
         const unitInput = isChapter
-            ? `<input type="text" class="w-full border p-1 text-sm rounded text-center bg-slate-100 text-slate-300 cursor-not-allowed" value="—" readonly tabindex="-1">`
-            : `<input type="text" list="sales-units-list" oninput="salesUpdateItem(${index}, 'unit', this.value)" class="w-full border p-1 text-sm rounded text-center" value="${String(item.unit || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;')}">`;
+            ? `<input type="text" class="w-full border p-1.5 text-sm rounded text-center bg-slate-100 text-slate-300 cursor-not-allowed" value="—" readonly tabindex="-1">`
+            : `<input type="text" list="sales-units-list" oninput="salesUpdateItem(${index}, 'unit', this.value)" class="w-full border p-1.5 text-sm rounded text-center bg-white" value="${String(item.unit || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;')}">`;
 
         const qtyInput = isChapter
-            ? `<input type="text" class="w-full border p-1 text-sm rounded text-right bg-slate-100 text-slate-300 cursor-not-allowed" value="—" readonly tabindex="-1">`
-            : `<input type="number" step="0.5" oninput="salesUpdateItem(${index}, 'quantity', parseFloat(this.value) || 0)" class="w-full border p-1 text-sm rounded text-right" value="${item.quantity}">`;
+            ? `<input type="text" class="w-full border p-1.5 text-sm rounded text-right bg-slate-100 text-slate-300 cursor-not-allowed" value="—" readonly tabindex="-1">`
+            : `<input type="number" step="0.5" oninput="salesUpdateItem(${index}, 'quantity', parseFloat(this.value) || 0)" class="w-full border p-1.5 text-sm rounded text-right bg-white" value="${item.quantity}">`;
 
         const priceInput = disablePrice
-            ? `<input type="number" step="0.01" class="w-full border p-1 text-sm rounded text-right bg-slate-100 text-slate-400 cursor-not-allowed" value="${isNote || isChapter ? 0 : item.unitPrice}" readonly tabindex="-1">`
-            : `<input type="number" step="0.01" oninput="salesUpdateItem(${index}, 'unitPrice', parseFloat(this.value) || 0)" class="w-full border p-1 text-sm rounded text-right" value="${item.unitPrice}">`;
+            ? `<input type="number" step="0.01" class="w-full border p-1.5 text-sm rounded text-right bg-slate-100 text-slate-400 cursor-not-allowed" value="${isNote || isChapter ? 0 : item.unitPrice}" readonly tabindex="-1">`
+            : `<input type="number" step="0.01" oninput="salesUpdateItem(${index}, 'unitPrice', parseFloat(this.value) || 0)" class="w-full border p-1.5 text-sm rounded text-right bg-white" value="${item.unitPrice}">`;
 
         const totalCell = disablePrice
             ? `<span id="sales-item-total-${index}" class="text-slate-300 text-xs italic">—</span>`
@@ -687,46 +685,61 @@ function renderSalesItems() {
         const escapedDesc = String(item.description || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
         tr.innerHTML = `
-            <td class="px-2 py-2 align-top">
-                <select onchange="salesUpdateItemType(${index}, this.value)" class="w-full border p-1 text-xs font-medium rounded ${isChapter ? 'bg-amber-100 text-amber-900 border-amber-300 font-bold' : ''}">
+            <td class="cell-type px-2 py-2 align-top">
+                <span class="md:hidden block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Tipologia</span>
+                <select onchange="salesUpdateItemType(${index}, this.value)" class="w-full border p-1.5 text-xs font-medium rounded bg-white ${isChapter ? 'bg-amber-100 text-amber-900 border-amber-300 font-bold' : ''}">
                     <option value="Merce" ${merceSelected}>Merce</option>
                     <option value="Note" ${noteSelected}>Nota</option>
                     <option value="Capitolo" ${chapterSelected}>Capitolo</option>
                 </select>
             </td>
-            <td class="px-2 py-2 align-top">
+            <td class="cell-desc px-2 py-2 align-top">
+                <span class="md:hidden block text-[10px] font-bold uppercase text-slate-400 mb-0.5">${isChapter ? 'Titolo Capitolo' : 'Descrizione'}</span>
                 <textarea rows="1" oninput="salesUpdateItem(${index}, 'description', this.value); salesAutoResize(this)"
                     placeholder="${isChapter ? 'Es. 1. OPERE DI DEMOLIZIONE E SMALTIMENTO...' : 'Descrizione lavorazione o fornitura...'}"
-                    class="sales-desc-textarea w-full border p-1.5 text-sm rounded resize-none overflow-hidden leading-snug ${isChapter ? 'font-bold text-slate-900 bg-amber-50/50 border-amber-300' : ''}">${escapedDesc}</textarea>
+                    class="sales-desc-textarea w-full border p-1.5 text-sm rounded resize-none overflow-hidden leading-snug bg-white ${isChapter ? 'font-bold text-slate-900 bg-amber-50/50 border-amber-300' : ''}">${escapedDesc}</textarea>
             </td>
-            <td class="px-2 py-2 align-top">${unitInput}</td>
-            <td class="px-2 py-2 align-top">${qtyInput}</td>
-            <td class="px-2 py-2 align-top">${priceInput}</td>
-            <td class="px-2 py-2 text-right font-medium align-top pt-3">${totalCell}</td>
-            <td class="px-2 py-2 text-center whitespace-nowrap align-top">
-                <div class="inline-flex items-center gap-1">
+            <td class="cell-unit px-2 py-2 align-top">
+                <span class="md:hidden block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Unità</span>
+                ${unitInput}
+            </td>
+            <td class="cell-qty px-2 py-2 align-top">
+                <span class="md:hidden block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Q.tà</span>
+                ${qtyInput}
+            </td>
+            <td class="cell-price px-2 py-2 align-top">
+                <span class="md:hidden block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Prezzo (€)</span>
+                ${priceInput}
+            </td>
+            <td class="cell-total px-2 py-2 text-right font-medium align-top md:pt-3">
+                <span class="md:hidden block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Totale Riga</span>
+                ${totalCell}
+            </td>
+            <td class="cell-actions px-2 py-2 text-center whitespace-nowrap align-top">
+                <span class="md:hidden block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Azioni Riga</span>
+                <div class="inline-flex flex-wrap justify-end items-center gap-1">
                     <button type="button" onclick="salesInsertItem(${index})" title="Inserisci riga sopra"
-                        class="px-1.5 py-0.5 text-xs font-medium bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded border border-indigo-200">+Sopra</button>
+                        class="px-1.5 py-1 text-xs font-medium bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded border border-indigo-200">+Sopra</button>
                     <button type="button" onclick="salesInsertItem(${index + 1})" title="Inserisci riga sotto"
-                        class="px-1.5 py-0.5 text-xs font-medium bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded border border-indigo-200">+Sotto</button>
+                        class="px-1.5 py-1 text-xs font-medium bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded border border-indigo-200">+Sotto</button>
                     <button type="button" onclick="salesMoveItem(${index}, -1)" title="Sposta su"
-                        class="p-1 text-slate-500 hover:text-indigo-600 disabled:opacity-30" ${index === 0 ? 'disabled' : ''}>
+                        class="p-1.5 text-slate-500 hover:text-indigo-600 disabled:opacity-30 bg-white md:bg-transparent rounded border md:border-0 border-slate-200" ${index === 0 ? 'disabled' : ''}>
                         <i data-lucide="arrow-up" class="w-3.5 h-3.5"></i>
                     </button>
                     <button type="button" onclick="salesMoveItem(${index}, 1)" title="Sposta giù"
-                        class="p-1 text-slate-500 hover:text-indigo-600 disabled:opacity-30" ${index === currentItems.length - 1 ? 'disabled' : ''}>
+                        class="p-1.5 text-slate-500 hover:text-indigo-600 disabled:opacity-30 bg-white md:bg-transparent rounded border md:border-0 border-slate-200" ${index === currentItems.length - 1 ? 'disabled' : ''}>
                         <i data-lucide="arrow-down" class="w-3.5 h-3.5"></i>
                     </button>
                     <button type="button" onclick="salesDuplicateRow(${index})" title="Duplica questa riga"
-                        class="p-1 text-slate-500 hover:text-indigo-600">
+                        class="p-1.5 text-slate-500 hover:text-indigo-600 bg-white md:bg-transparent rounded border md:border-0 border-slate-200">
                         <i data-lucide="copy" class="w-3.5 h-3.5"></i>
                     </button>
                     <button type="button" onclick="salesSaveRowToCatalog(${index})" title="Salva voce in Articoli & Listini"
-                        class="p-1 text-slate-500 hover:text-emerald-600">
+                        class="p-1.5 text-slate-500 hover:text-emerald-600 bg-white md:bg-transparent rounded border md:border-0 border-slate-200">
                         <i data-lucide="bookmark-plus" class="w-3.5 h-3.5"></i>
                     </button>
                     <button type="button" onclick="salesRemoveItem(${index})" title="Elimina riga"
-                        class="p-1 text-red-500 hover:text-red-700">
+                        class="p-1.5 text-red-500 hover:text-red-700 bg-white md:bg-transparent rounded border md:border-0 border-red-100">
                         <i data-lucide="trash-2" class="w-4 h-4"></i>
                     </button>
                 </div>

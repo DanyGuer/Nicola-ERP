@@ -195,8 +195,8 @@
                             class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"><i
                                 data-lucide="plus" class="w-4 h-4"></i> Nuovo Cliente</button>
                     </div>
-                    <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-                        <table class="w-full text-left text-sm">
+                    <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-x-auto">
+                        <table class="w-full text-left text-sm min-w-[520px]">
                             <thead class="bg-slate-50 border-b border-slate-200">
                                 <tr>
                                     <th class="px-6 py-4 font-semibold">Cliente</th>
@@ -218,8 +218,8 @@
                             class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"><i
                                 data-lucide="plus" class="w-4 h-4"></i> Nuovo Articolo</button>
                     </div>
-                    <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-                        <table class="w-full text-left text-sm">
+                    <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-x-auto">
+                        <table class="w-full text-left text-sm min-w-[520px]">
                             <thead class="bg-slate-50 border-b border-slate-200">
                                 <tr>
                                     <th class="px-6 py-4 font-semibold">Tipologia</th>
@@ -301,8 +301,8 @@
                             class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"><i
                                 data-lucide="plus" class="w-4 h-4"></i> Nuovo Fornitore</button>
                     </div>
-                    <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-                        <table class="w-full text-left text-sm">
+                    <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-x-auto">
+                        <table class="w-full text-left text-sm min-w-[520px]">
                             <thead class="bg-slate-50 border-b border-slate-200">
                                 <tr>
                                     <th class="px-6 py-4 font-semibold">Fornitore</th>
@@ -325,8 +325,8 @@
                                 data-lucide="plus" class="w-4 h-4"></i> Nuova Spesa</button>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6" id="exp-summary"></div>
-                    <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-                        <table class="w-full text-left text-sm">
+                    <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-x-auto">
+                        <table class="w-full text-left text-sm min-w-[520px]">
                             <thead class="bg-slate-50 border-b border-slate-200">
                                 <tr>
                                     <th class="px-6 py-4 font-semibold">Data</th>
@@ -373,7 +373,7 @@
 
     <!-- CRM MODAL -->
     <div id="crm-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div class="p-4 border-b border-slate-100 flex justify-between items-center">
                 <h3 class="font-bold text-lg">Cliente</h3>
                 <button onclick="crmCloseModal()"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -418,7 +418,7 @@
 
     <!-- INVENTORY MODAL -->
     <div id="inv-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div class="p-4 border-b border-slate-100 flex justify-between items-center">
                 <h3 class="font-bold text-lg">Articolo</h3>
                 <button onclick="invCloseModal()"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -460,7 +460,7 @@
 
     <!-- SUPPLIER MODAL -->
     <div id="supp-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div class="p-4 border-b border-slate-100 flex justify-between items-center">
                 <h3 class="font-bold text-lg">Fornitore</h3>
                 <button onclick="suppCloseModal()"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -506,7 +506,7 @@
 
     <!-- EXPENSE MODAL -->
     <div id="exp-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div class="p-4 border-b border-slate-100 flex justify-between items-center">
                 <h3 class="font-bold text-lg">Spesa</h3>
                 <button onclick="expCloseModal()"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -563,7 +563,7 @@
 
     <!-- PROJECT MODAL -->
     <div id="proj-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div class="p-4 border-b border-slate-100 flex justify-between items-center">
                 <h3 class="font-bold text-lg">Cantiere / Progetto</h3>
                 <button onclick="projCloseModal()"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -610,7 +610,7 @@
 
     <!-- CALENDAR EVENT MODAL -->
     <div id="cal-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div class="p-4 border-b border-slate-100 flex justify-between items-center">
                 <h3 class="font-bold text-lg">Evento / Appuntamento</h3>
                 <button onclick="calCloseModal()"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -735,34 +735,40 @@
 
     <!-- SALES MODAL (Full Screen) -->
     <div id="sales-modal" class="fixed inset-0 bg-white z-50 hidden overflow-y-auto">
-        <div class="max-w-6xl mx-auto p-6">
-            <div class="flex flex-wrap justify-between items-center gap-3 mb-6 border-b border-slate-100 pb-4 sticky top-0 bg-white/95 backdrop-blur z-20 pt-2">
-                <div>
-                    <h2 class="text-2xl font-bold text-slate-800" id="sales-modal-title">Nuova Offerta</h2>
-                    <p class="text-sm text-slate-500">Compila i dettagli del preventivo</p>
+        <div class="max-w-6xl mx-auto p-3 sm:p-6 pb-24 md:pb-8">
+            <div class="flex flex-wrap justify-between items-center gap-2 mb-4 md:mb-6 border-b border-slate-100 pb-3 sticky top-0 bg-white/95 backdrop-blur z-20 pt-1">
+                <div class="flex items-center justify-between w-full md:w-auto">
+                    <div>
+                        <h2 class="text-lg md:text-2xl font-bold text-slate-800" id="sales-modal-title">Nuova Offerta</h2>
+                        <p class="text-xs md:text-sm text-slate-500 hidden sm:block">Compila i dettagli del preventivo</p>
+                    </div>
+                    <button type="button" onclick="salesCloseModal()"
+                        class="md:hidden p-2 text-slate-500 hover:bg-slate-100 rounded-lg font-medium text-sm flex items-center gap-1">
+                        <i data-lucide="x" class="w-5 h-5"></i> Chiudi
+                    </button>
                 </div>
-                <div class="flex flex-wrap items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2 w-full md:w-auto justify-between md:justify-end">
                     <select id="sales-status-select" name="status"
-                        class="border border-slate-300 rounded-lg px-3 py-2 text-sm font-semibold bg-slate-50 text-slate-700">
+                        class="border border-slate-300 rounded-lg px-2.5 py-1.5 md:px-3 md:py-2 text-xs md:text-sm font-semibold bg-slate-50 text-slate-700 flex-1 md:flex-initial">
                         <option value="Bozza">Stato: Bozza</option>
                         <option value="Inviata">Stato: Inviata</option>
                         <option value="Accettata">Stato: Accettata</option>
                         <option value="Rifiutata">Stato: Rifiutata</option>
                     </select>
                     <button type="button" id="sales-btn-duplicate-modal" onclick="salesDuplicateCurrent()"
-                        class="hidden px-3 py-2 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg font-medium text-sm flex items-center gap-1.5"
+                        class="hidden px-3 py-1.5 md:py-2 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg font-medium text-xs md:text-sm flex items-center gap-1.5"
                         title="Crea una copia di questo preventivo"><i data-lucide="copy" class="w-4 h-4"></i> Duplica</button>
                     <button type="button" onclick="salesCloseModal()"
-                        class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium text-sm">Chiudi</button>
+                        class="hidden md:inline-flex px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium text-sm">Chiudi</button>
                     <button type="button" onclick="salesGeneratePDF(false)"
-                        class="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-medium shadow-sm flex items-center gap-1.5 text-sm"><i
+                        class="hidden md:inline-flex px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-medium shadow-sm items-center gap-1.5 text-sm"><i
                             data-lucide="eye" class="w-4 h-4"></i> Anteprima PDF</button>
                     <button type="button" onclick="salesGeneratePDF(true)"
-                        class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium shadow-sm flex items-center gap-1.5 text-sm"
+                        class="hidden md:inline-flex px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium shadow-sm items-center gap-1.5 text-sm"
                         title="Scarica il PDF rinominato con il nome del cliente"><i
                             data-lucide="download" class="w-4 h-4"></i> Scarica PDF</button>
                     <button type="button" onclick="salesSave()"
-                        class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium shadow-sm text-sm flex items-center gap-1.5"><i
+                        class="hidden md:inline-flex px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium shadow-sm text-sm items-center gap-1.5"><i
                             data-lucide="save" class="w-4 h-4"></i> Salva</button>
                 </div>
             </div>
@@ -842,30 +848,30 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <div class="bg-white p-3.5 sm:p-6 rounded-xl border border-slate-200 shadow-sm">
                     <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
                         <h3 class="font-semibold text-slate-800 flex items-center gap-2"><i data-lucide="package"
                                 class="w-5 h-5 text-indigo-600"></i> Articoli, Capitoli e Lavorazioni
                         </h3>
-                        <div class="flex flex-wrap items-center gap-2">
+                        <div class="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
                             <!-- Inserimento rapido da Listino -->
-                            <div class="flex items-center gap-1">
+                            <div class="w-full sm:w-auto">
                                 <select id="sales-catalog-select" onchange="salesAddFromCatalog(this.value)"
-                                    class="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 bg-slate-50 text-slate-700 max-w-xs">
+                                    class="w-full sm:max-w-xs text-xs border border-slate-300 rounded-lg px-2.5 py-2 bg-slate-50 text-slate-700">
                                     <option value="">+ Inserisci voce da Listino...</option>
                                 </select>
                             </div>
                             <button type="button" onclick="salesAddSectionHeader()"
-                                class="text-xs bg-amber-50 text-amber-800 px-3 py-1.5 rounded-lg font-medium hover:bg-amber-100 border border-amber-200"
-                                title="Aggiunge una riga di titolo/capitolo per dividere le fasi di lavoro">+ Capitolo / Titolo</button>
+                                class="flex-1 sm:flex-initial text-center text-xs bg-amber-50 text-amber-800 px-2.5 py-2 rounded-lg font-medium hover:bg-amber-100 border border-amber-200"
+                                title="Aggiunge una riga di titolo/capitolo per dividere le fasi di lavoro">+ Capitolo</button>
                             <button type="button" onclick="salesInsertItem(0)"
-                                class="text-xs bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg font-medium hover:bg-indigo-100 border border-indigo-200">+ Riga all'inizio</button>
+                                class="flex-1 sm:flex-initial text-center text-xs bg-indigo-50 text-indigo-700 px-2.5 py-2 rounded-lg font-medium hover:bg-indigo-100 border border-indigo-200">+ All'inizio</button>
                             <button type="button" onclick="salesAddItem()"
-                                class="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-indigo-700 shadow-sm">+ Aggiungi Riga</button>
+                                class="flex-1 sm:flex-initial text-center text-xs bg-indigo-600 text-white px-3 py-2 rounded-lg font-medium hover:bg-indigo-700 shadow-sm">+ Nuova Riga</button>
                         </div>
                     </div>
                     <!-- Modalità Prezzo -->
-                    <div class="mb-4 flex items-center gap-6 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <div class="mb-4 flex flex-wrap items-center gap-3 sm:gap-6 p-3 bg-slate-50 rounded-lg border border-slate-200">
                         <span class="text-sm font-medium text-slate-600">Tipo Prezzo:</span>
                         <label class="flex items-center gap-2 cursor-pointer">
                             <input type="radio" name="pricingMode" value="itemized" checked
@@ -880,17 +886,17 @@
                     </div>
                     <!-- Campo importo a corpo (nascosto di default) -->
                     <div id="lump-sum-row"
-                        class="hidden mb-4 flex items-center gap-4 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+                        class="hidden mb-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
                         <label class="text-sm font-semibold text-indigo-800 whitespace-nowrap">Importo Totale Lordo
                             (€):</label>
                         <input type="number" step="0.01" min="0" id="sales-lump-sum-amount" value="0"
                             placeholder="Inserisci importo lordo complessivo"
-                            class="flex-1 border border-indigo-300 rounded-lg p-2.5 text-right font-bold text-indigo-900 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                            class="w-full sm:flex-1 border border-indigo-300 rounded-lg p-2.5 text-right font-bold text-indigo-900 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
                             oninput="salesCalcTotals()">
                         <span class="text-xs text-indigo-600">Lo sconto e l'IVA verranno calcolati su questo
                             importo</span>
                     </div>
-                    <table class="w-full text-left text-sm">
+                    <table id="sales-items-table" class="w-full text-left text-sm">
                         <thead class="bg-slate-50 text-slate-500">
                             <tr>
                                 <th class="px-2 py-2 w-28">Tipo</th>
@@ -903,61 +909,56 @@
                             </tr>
                         </thead>
                         <tbody id="sales-items-body" class="divide-y divide-slate-100"></tbody>
-                        <tfoot class="border-t border-slate-200 font-bold bg-slate-50">
-                            <tr>
-                                <td colspan="5" class="px-4 py-2 text-right text-slate-500 font-normal">Lordo
-                                </td>
-                                <td class="px-4 py-2 text-right" id="sales-gross-total">€ 0,00</td>
-                                <td></td>
-                            </tr>
-                            <tr>
-                                <td colspan="5" class="px-4 py-2 text-right text-red-500 font-normal">
-                                    <span>Sconto</span>
-                                    <select id="sales-discount-type" onchange="salesCalcTotals()"
-                                        class="border rounded px-1.5 py-1 text-xs bg-white text-red-600 font-semibold ml-1">
-                                        <option value="eur">€ (Euro)</option>
-                                        <option value="perc">% (Percentuale)</option>
-                                    </select>
-                                    <input type="number" step="0.01" min="0" id="sales-discount" value="0"
-                                        class="w-24 text-right border rounded px-1.5 py-1 mx-1 text-sm text-red-600 font-semibold bg-white"
-                                        oninput="salesCalcTotals()" onchange="salesCalcTotals()">
-                                </td>
-                                <td class="px-4 py-2 text-right text-red-500" id="sales-discount-display">- €
-                                    0,00</td>
-                                <td></td>
-                            </tr>
-                            <tr>
-                                <td colspan="5" class="px-4 py-3 text-right font-bold">Imponibile Netto</td>
-                                <td class="px-4 py-3 text-right font-bold" id="sales-subtotal">€ 0,00</td>
-                                <td></td>
-                            </tr>
-                            <tr>
-                                <td colspan="5" class="px-4 py-2 text-right text-slate-500 font-normal">
-                                    <span class="mr-2">Aliquota IVA:</span>
-                                    <select id="sales-vat-select" onchange="salesVatSelectChanged()"
-                                        class="border rounded px-2 py-1 text-sm bg-white font-medium mr-1 text-slate-700">
-                                        <option value="22">22% (Ordinaria)</option>
-                                        <option value="10">10% (Agevolata - Ristrutturazione)</option>
-                                        <option value="4">4% (Agevolata - Prima Casa)</option>
-                                        <option value="0">0% (Esente / Forfettario)</option>
-                                        <option value="custom">Personalizzata...</option>
-                                    </select>
-                                    <input type="number" id="sales-vat-rate" name="vatRate" min="0" max="100" step="0.1" value="22"
-                                        class="w-16 text-center border rounded px-1 py-1 text-sm font-semibold"
-                                        oninput="salesVatInputChanged()" onchange="salesVatInputChanged()">%
-                                </td>
-                                <td class="px-4 py-2 text-right text-slate-500 font-normal" id="sales-vat-amount">€ 0,00
-                                </td>
-                                <td></td>
-                            </tr>
-                            <tr>
-                                <td colspan="5" class="px-4 py-3 text-right text-lg text-indigo-700">Totale</td>
-                                <td class="px-4 py-3 text-right text-lg text-indigo-700" id="sales-total">€ 0,00
-                                </td>
-                                <td></td>
-                            </tr>
-                        </tfoot>
                     </table>
+                    <!-- Riepilogo Totali Responsive (perfetto sia su Mobile che su Desktop) -->
+                    <div class="mt-4 bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2.5 text-sm">
+                        <div class="flex justify-between items-center text-slate-600">
+                            <span>Totale Lordo</span>
+                            <span class="font-semibold text-slate-800" id="sales-gross-total">€ 0,00</span>
+                        </div>
+                        <div class="flex flex-wrap justify-between items-center gap-2 text-red-600 pt-1 border-t border-slate-200/60">
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <span>Sconto:</span>
+                                <select id="sales-discount-type" onchange="salesCalcTotals()"
+                                    class="border border-red-200 rounded-lg px-2 py-1 text-xs bg-white text-red-600 font-semibold">
+                                    <option value="eur">€ (Euro)</option>
+                                    <option value="perc">% (Percentuale)</option>
+                                </select>
+                                <input type="number" step="0.01" min="0" id="sales-discount" value="0"
+                                    class="w-24 text-right border border-red-200 rounded-lg px-2 py-1 text-sm text-red-600 font-semibold bg-white"
+                                    oninput="salesCalcTotals()" onchange="salesCalcTotals()">
+                            </div>
+                            <span class="font-semibold" id="sales-discount-display">- € 0,00</span>
+                        </div>
+                        <div class="flex justify-between items-center font-bold text-slate-800 pt-2 border-t border-slate-200">
+                            <span>Imponibile Netto</span>
+                            <span id="sales-subtotal">€ 0,00</span>
+                        </div>
+                        <div class="flex flex-wrap justify-between items-center gap-2 text-slate-600 pt-1">
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <span>IVA:</span>
+                                <select id="sales-vat-select" onchange="salesVatSelectChanged()"
+                                    class="border rounded-lg px-2 py-1 text-xs sm:text-sm bg-white font-medium text-slate-700">
+                                    <option value="22">22% (Ordinaria)</option>
+                                    <option value="10">10% (Ristrutturazione)</option>
+                                    <option value="4">4% (Prima Casa)</option>
+                                    <option value="0">0% (Esente / Forfettario)</option>
+                                    <option value="custom">Personalizzata...</option>
+                                </select>
+                                <div class="inline-flex items-center gap-1">
+                                    <input type="number" id="sales-vat-rate" name="vatRate" min="0" max="100" step="0.1" value="22"
+                                        class="w-16 text-center border rounded-lg px-1.5 py-1 text-sm font-semibold bg-white"
+                                        oninput="salesVatInputChanged()" onchange="salesVatInputChanged()">
+                                    <span>%</span>
+                                </div>
+                            </div>
+                            <span class="font-medium" id="sales-vat-amount">€ 0,00</span>
+                        </div>
+                        <div class="flex justify-between items-center text-base sm:text-lg font-bold text-indigo-700 pt-2.5 border-t border-slate-300">
+                            <span>Totale Preventivo</span>
+                            <span id="sales-total">€ 0,00</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
@@ -1052,6 +1053,22 @@ ART. 8 - TRATTAMENTO DATI (GDPR)
                     </div>
                 </div>
             </form>
+            <!-- Barra Azioni Fissa in Basso su Mobile per il Preventivo -->
+            <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-2.5 z-30 flex items-center gap-2 shadow-lg"
+                style="padding-bottom: max(0.625rem, env(safe-area-inset-bottom))">
+                <button type="button" onclick="salesGeneratePDF(false)"
+                    class="flex-1 py-2.5 px-2 bg-slate-800 text-white rounded-lg font-semibold text-xs flex items-center justify-center gap-1 shadow-sm">
+                    <i data-lucide="eye" class="w-4 h-4"></i> Anteprima
+                </button>
+                <button type="button" onclick="salesGeneratePDF(true)"
+                    class="flex-1 py-2.5 px-2 bg-emerald-600 text-white rounded-lg font-semibold text-xs flex items-center justify-center gap-1 shadow-sm">
+                    <i data-lucide="download" class="w-4 h-4"></i> Scarica PDF
+                </button>
+                <button type="button" onclick="salesSave()"
+                    class="flex-1 py-2.5 px-3 bg-indigo-600 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1 shadow-sm">
+                    <i data-lucide="save" class="w-4 h-4"></i> Salva
+                </button>
+            </div>
         </div>
     </div>
 
