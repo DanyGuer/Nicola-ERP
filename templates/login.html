@@ -73,6 +73,19 @@
                         Accedi
                     </button>
                 </form>
+
+                <!-- Pulsante Installa App su Smartphone -->
+                <div class="mt-5 pt-4 border-t border-white/10">
+                    <button type="button" id="pwa-install-btn" onclick="triggerPwaInstall()"
+                        class="w-full py-2.5 px-4 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-200 font-semibold text-sm flex items-center justify-center gap-2 transition-all">
+                        <span>📲</span> Installa App sul Telefono
+                    </button>
+                    <div id="pwa-install-guide" class="hidden mt-3 p-3.5 rounded-xl bg-black/40 border border-white/15 text-xs text-indigo-100 space-y-2 leading-relaxed">
+                        <p class="font-bold text-white">Come aggiungere l'icona MiniERP alla Home:</p>
+                        <p>🍎 <b>iPhone / iPad (Safari):</b> tocca il tasto <b>Condividi [↑]</b> in basso al centro e scorri fino a <b>"Aggiungi alla schermata Home"</b>.</p>
+                        <p>🤖 <b>Android (Chrome):</b> tocca i <b>3 puntini [⋮]</b> in alto a destra e seleziona <b>"Installa app"</b> o <b>"Aggiungi a schermata Home"</b>.</p>
+                    </div>
+                </div>
             </div>
 
             <div class="px-8 py-4 bg-black/20 border-t border-white/10 text-center text-xs text-white/40">
@@ -81,6 +94,26 @@
         </div>
     </div>
 
+    <script>
+        let deferredPwaPrompt = null;
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(() => {});
+        }
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPwaPrompt = e;
+        });
+        async function triggerPwaInstall() {
+            if (deferredPwaPrompt) {
+                deferredPwaPrompt.prompt();
+                await deferredPwaPrompt.userChoice;
+                deferredPwaPrompt = null;
+            } else {
+                const guide = document.getElementById('pwa-install-guide');
+                if (guide) guide.classList.toggle('hidden');
+            }
+        }
+    </script>
 </body>
 
 </html>
